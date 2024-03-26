@@ -39,6 +39,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   final (bool, String) _environmentStatus = checkEnvironment();
 
+  /// Custom styled text button with a reversed icon position
   Widget _buildNextButton() {
     return Directionality(
       textDirection: TextDirection.rtl,

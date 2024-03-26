@@ -34,13 +34,10 @@ class _AudioAnalysisState extends State<AudioAnalysis> {
   /// [Duration] for the position of the audio player.
   Duration _playerPosition = const Duration();
 
-  /// The length [Duration] of the audio file.
-  Duration _audioLength = const Duration(milliseconds: 10000); //Placeholder duration
-
   /// [List] of the audio file's audio samples.
   final List<double> _samples = [];
 
-  ///
+  /// The audio length in milliseconds, expressed as a [double].
   double _lengthInMillis = 0;
 
   /// [GlobalKey] assigned to the timestamp painer.
@@ -49,9 +46,10 @@ class _AudioAnalysisState extends State<AudioAnalysis> {
   /// The [Offset] of the latest mouse hit.
   Offset? _hitOffset;
 
-  ///
+  /// [List] of doubles (beat times in seconds) for all the set markers.
   final List<double> beatTimes = [];
 
+  /// [FocusNode] for the keyboard listener.
   final FocusNode _keyboardFocus = FocusNode();
 
   /// Starts to load the audio from the config video path.
@@ -68,9 +66,6 @@ class _AudioAnalysisState extends State<AudioAnalysis> {
       _samples.clear();
       _samples.addAll(samplesData);
     });
-
-    // Set the max duration for the waveform
-    _audioLength = Duration(milliseconds: _lengthInMillis.round());
 
     // Listen for position changes, so that the state can change, whenever the position passes a beat.
     _playerPositionStream = _player.onPositionChanged.listen((event) {
@@ -90,26 +85,15 @@ class _AudioAnalysisState extends State<AudioAnalysis> {
     _player.play(DeviceFileSource(widget.data.path));
   }
 
-  void _addTimeStampForRemoval(final List<double> timeStamp) {
-    for (final double element in timeStamp) {
-      beatTimes.remove(element);
-    }
-    _hitOffset = null;
-    WidgetsBinding.instance.addPostFrameCallback((_) => setState(() {}));
-  }
-
   void _handleMouseInput(PointerDownEvent event) {
     final RenderBox? referenceBox = _paintKey.currentContext?.findRenderObject() as RenderBox?;
 
     if (referenceBox == null) {
       return;
     }
-
-    final Offset offset = event.localPosition;
-
-    setState(() {
-      _hitOffset = offset;
-    });
+    // set the new hit
+    _hitOffset = event.localPosition;
+    setState(() {}); // refresh
   }
 
   void _handleKeyboardInput(final KeyEvent event) {
@@ -128,6 +112,15 @@ class _AudioAnalysisState extends State<AudioAnalysis> {
     }
   }
 
+  void _addTimeStampForRemoval(final List<double> timeStamp) {
+    for (final double element in timeStamp) {
+      beatTimes.remove(element);
+    }
+    _hitOffset = null;
+    WidgetsBinding.instance.addPostFrameCallback((_) => setState(() {}));
+  }
+
+  /// add a new marker and sets the state post frame.
   void _addNewTimeStamp(final double timeStamp) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       beatTimes.add(timeStamp);
@@ -137,8 +130,9 @@ class _AudioAnalysisState extends State<AudioAnalysis> {
     });
   }
 
+  /// Saves the current state & navigates to the cut page.
   void _navigateToCutPage() async {
-     await _player.pause();
+    await _player.pause();
 
     audio_loader
         .saveAudioData(widget.data, beatTimes)
@@ -187,7 +181,7 @@ class _AudioAnalysisState extends State<AudioAnalysis> {
                         height: size.height * 0.5,
                         width: size.width * 0.95,
                         elapsedDuration: _playerPosition,
-                        maxDuration: _audioLength,
+                        maxDuration: Duration(milliseconds: _lengthInMillis.round()),
                         activeColor: Colors.greenAccent,
                       ),
                     ),
