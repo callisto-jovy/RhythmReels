@@ -4,7 +4,7 @@ import 'package:updat/updat_window_manager.dart';
 import 'src/version.dart' as version;
 import 'pages/fill_in_page.dart';
 import 'util/utils.dart';
-import 'widgets/styles.dart';
+import 'widgets/widgets.dart';
 
 Future<void> main() async {
   runApp(const MyApp());
@@ -37,14 +37,31 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  final (bool, String) _environmentStatus = checkEnvironment();
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  void _displayFfmpegProgress(final FFMpegProgress progress) {
+    ScaffoldMessenger.of(context).showSnackBar(successSnackbar(progress.phase.name));
+  }
+
+  void _solveEnvironmentAndNavigate() async {
+    FFMpegHelper.instance
+        .isFFMpegPresent()
+        .then((value) => value ? value : FFMpegHelper.instance.setupFFMpegOnWindows())
+        .then((value) => context.navigatePage((context) => const FillInPage()))
+        .catchError((e) {
+      ScaffoldMessenger.of(context).showSnackBar(errorSnackbar('$e'));
+    });
+  }
 
   /// Custom styled text button with a reversed icon position
   Widget _buildNextButton() {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: TextButton.icon(
-        onPressed: _environmentStatus.$1 ? () => context.navigatePage((context) => const FillInPage()) : null,
+        onPressed: _solveEnvironmentAndNavigate,
         style: textButtonStyle(context),
         icon: const Icon(Icons.navigate_before),
         label: const Text('Next'),
@@ -77,9 +94,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 style: Theme.of(context).textTheme.headlineLarge,
               ),
               const Padding(padding: EdgeInsets.all(10)),
-              Text('Environment status:\n${_environmentStatus.$2}', style: Theme.of(context).textTheme.headlineSmall),
-              const Padding(padding: EdgeInsets.all(10)),
-              _buildNextButton()
+              _buildNextButton(),
             ]),
           ),
         ),

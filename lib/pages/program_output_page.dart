@@ -5,7 +5,6 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pro_image_editor/pro_image_editor.dart';
-import 'package:pro_image_editor/pro_image_editor_main.dart';
 import '../util/backend/backend.dart' as backend;
 import '../util/utils.dart';
 import '../widgets/widgets.dart';

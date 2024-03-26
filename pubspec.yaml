@@ -2,7 +2,7 @@ name: video_cutter
 description: "VideoCutter is a small application that automatically cuts a randomly selected videos to a specified beat."
 publish_to: 'none'
 
-version: 1.0.3
+version: 1.0.4
 
 environment:
   sdk: '>=3.2.5 <4.0.0'
@@ -25,7 +25,9 @@ dependencies:
   path_provider: ^2.1.2 # provides platform specific paths
   updat: ^1.3.2 # auto updating from GitHub
   build_version: ^2.1.1 # useful for auto update workflow
-
+  package_info_plus: ^6.0.0
+  dio: ^5.4.2
+  archive: ^3.3.7
 
 dev_dependencies:
   flutter_test:

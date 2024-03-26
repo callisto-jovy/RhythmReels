@@ -1,16 +1,15 @@
 import 'dart:io';
+import '../util/utils.dart';
 
-(bool, String) checkEnvironment() {
+Future<(bool, String)> checkEnvironment() async {
   final Map<String, String> vars = Platform.environment;
 
   final List<String> required = ['ffmpeg', 'java'];
 
   // TODO: Try to run
 
-  for (final String s in required) {
-
-
-
+  if (!await FFMpegHelper.instance.isFFMpegPresent()) {
+    return (false, 'Ffmpeg is missing. Please ');
   }
 
   return (true, 'Environment ok!');

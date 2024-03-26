@@ -15,6 +15,14 @@ SnackBar successSnackbar(String message) => _defaultBar(
   ),
 );
 
+SnackBar infoSnackbar(String message) => _defaultBar(
+  AwesomeSnackbarContent(
+    title: 'Info',
+    message: message,
+    contentType: ContentType.help,
+  ),
+);
+
 SnackBar errorSnackbar(String message) => _defaultBar(
   AwesomeSnackbarContent(
     title: 'Oh Snap!',
