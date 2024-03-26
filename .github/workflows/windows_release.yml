@@ -12,7 +12,6 @@ jobs:
         with:
           channel: 'stable'
           flutter-version: '3.19.4'
-        if: startsWith(github.ref, 'refs/tags/')
       - name: Install project dependencies
         run: flutter pub get
       - name: Generate intermediates
@@ -29,6 +28,7 @@ jobs:
           directory: build/windows/x64/runner/Release
       - name: Windows Release
         uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
