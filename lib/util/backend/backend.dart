@@ -3,25 +3,27 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/services.dart';
-import 'package:path/path.dart';
-import 'package:path_provider/path_provider.dart';
 
 const String kCuttingRunnable = 'cutter.exe';
 
 Future<File> initBackend() async {
   // TODO: This is NOT the way...
 
-  final Directory appDocumentsDir = await getApplicationDocumentsDirectory();
-  final File file = File(join(appDocumentsDir.path, 'cutter.exe'));
+  // Move the file out of the assets bundle, so that the temp folder may be shared.
+  // TODO: Would be better, if the backend had a argument which would set the temp folder
+  // maybe pass a env??
+  final File file = File('cutter.exe');
 
-  final bool exists = await file.exists();
-  // Sanity check.
-  if (exists && await file.length() > 0) {
-    return file;
-  }
+ // final bool exists = await file.exists();
+
+  // TODO: Sanity check. Also, check the file version and override when a new version comes.
+  // For now: Just always override
+ // if (exists && await file.length() > 0) {
+  //  return file;
+  //}
 
   // write byte data into the applications document directory.
-  final ByteData byteData = await rootBundle.load('cutter.exe');
+  final ByteData byteData = await rootBundle.load('assets/cutter.exe');
 
   return await file.writeAsBytes(byteData.buffer.asUint8List(byteData.offsetInBytes, byteData.lengthInBytes));
 }
@@ -51,7 +53,7 @@ Stream<String> runCutting(
     ],
   );
 
-  // print(['--audio', audioPath, '--videos', videosPath, '--output', outputPath, ...beats].join(" "));
+  //print(['--audio', audioPath, '--videos', videosPath, '--output', outputPath, ...beats].join(" "));
 
   //process.stdout.transform(utf8.decoder).forEach(print);
   //process.stderr.transform(utf8.decoder).forEach(print);
@@ -59,10 +61,15 @@ Stream<String> runCutting(
   yield* process.stdout.transform(utf8.decoder);
 
   // Potential error log.
-
   final List<String> errorLog = await process.stderr.transform(utf8.decoder).asyncMap((event) => 'Error: $event').toList();
 
   for (final String error in errorLog) {
     yield 'Error: $error';
+  }
+
+  // process exited non-successful
+  if (await process.exitCode != 0) {
+
+    throw Exception('Cutting process was not successful. Please check the output logs.');
   }
 }

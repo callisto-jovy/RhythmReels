@@ -57,8 +57,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Widget _buildNextButton() {
     return Directionality(
-      textDirection: TextDirection.rtl,
-      child: TextButton.icon(
+      textDirection: TextDirection.rtl, child: TextButton.icon(
         onPressed: _environmentStatus.$1 ? () => context.navigatePage((context) => const FillInPage()) : null,
         style: textButtonStyle(context),
         icon: const Icon(Icons.navigate_before),
