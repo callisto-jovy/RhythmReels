@@ -1,7 +1,8 @@
 import 'dart:io';
 
 import 'package:path/path.dart';
-import 'package:simple_youtube_editor_ui/util/config.dart';
+
+import 'config.dart';
 
 Future<File> createTemporaryFile(final Directory directory, {String? suffix}) async {
   final Directory tempDir = await directory.createTemp();

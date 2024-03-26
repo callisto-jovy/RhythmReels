@@ -5,16 +5,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_audio_waveforms/flutter_audio_waveforms.dart';
 import 'package:path/path.dart' as path;
-import 'package:simple_youtube_editor_ui/pages/program_output_page.dart';
-import 'package:simple_youtube_editor_ui/util/audio/audio_util.dart';
-import 'package:simple_youtube_editor_ui/util/model/audio_data.dart';
-import 'package:simple_youtube_editor_ui/widgets/build_context_extension.dart';
-import 'package:simple_youtube_editor_ui/widgets/time_stamp_painter.dart';
 import 'package:wav/wav_file.dart';
 import '../util/audio/audio_loader.dart' as audio_loader;
 
+import '../util/utils.dart';
 import '../widgets/audio_player_controls.dart';
 import '../widgets/styles.dart';
+import '../util/extensions/build_context_extension.dart';
+import '../widgets/widgets.dart';
+import 'program_output_page.dart';
 
 class AudioAnalysis extends StatefulWidget {
   final AudioData data;

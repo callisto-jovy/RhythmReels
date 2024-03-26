@@ -1,11 +1,10 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:simple_youtube_editor_ui/util/backend/downloader.dart';
-import 'package:simple_youtube_editor_ui/util/model/audio.dart';
-import 'package:simple_youtube_editor_ui/util/model/audio_data.dart';
 import '../config.dart';
 import 'package:path/path.dart' as path;
+
+import '../utils.dart';
 
 Future<AudioData> loadAudioData(final Audio audio, final File audioFile) async {
   final String fileName = '${audio.hashCode}.bin';

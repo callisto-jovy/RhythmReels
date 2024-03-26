@@ -4,20 +4,11 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:pro_image_editor/models/editor_configs/emoji_editor_configs.dart';
-import 'package:pro_image_editor/models/editor_configs/pro_image_editor_configs.dart';
-import 'package:pro_image_editor/models/editor_configs/text_editor_configs.dart';
-import 'package:pro_image_editor/models/import_export/export_state_history_configs.dart';
-import 'package:pro_image_editor/models/import_export/import_state_history.dart';
-import 'package:pro_image_editor/models/import_export/import_state_history_configs.dart';
-import 'package:pro_image_editor/models/import_export/utils/export_import_enum.dart';
 import 'package:pro_image_editor/pro_image_editor.dart';
 import 'package:pro_image_editor/pro_image_editor_main.dart';
-import 'package:simple_youtube_editor_ui/util/image_util.dart';
-import 'package:simple_youtube_editor_ui/widgets/build_context_extension.dart';
 import '../util/backend/backend.dart' as backend;
-import '../widgets/snackbars.dart';
-import '../widgets/styles.dart';
+import '../util/utils.dart';
+import '../widgets/widgets.dart';
 
 class ProgramOutputPage extends StatefulWidget {
   final String audioPath;
@@ -96,7 +87,7 @@ class _ProgramOutputPageState extends State<ProgramOutputPage> {
       context,
       MaterialPageRoute(
         builder: (context) => ProImageEditor.asset(
-          'images/transparent_9_16.png',
+          'assets/transparent_9_16.png',
           key: _imageEditor,
           onImageEditingComplete: (Uint8List bytes) async {
             // save the bytes into a temp file & use that file in the actual editing process.
