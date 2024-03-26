@@ -32,4 +32,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          files: build/windows/runner/Release/video_cutter-windows.zip
+          files: build/windows/runner/Release/video_cutter-windows-${{github.ref_name}}.zip
