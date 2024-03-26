@@ -7,14 +7,20 @@
 #include "generated_plugin_registrant.h"
 
 #include <audioplayers_windows/audioplayers_windows_plugin.h>
-#include <auto_update/auto_update_plugin.h>
 #include <emoji_picker_flutter/emoji_picker_flutter_plugin_c_api.h>
+#include <screen_retriever/screen_retriever_plugin.h>
+#include <url_launcher_windows/url_launcher_windows.h>
+#include <window_manager/window_manager_plugin.h>
 
 void RegisterPlugins(flutter::PluginRegistry* registry) {
   AudioplayersWindowsPluginRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("AudioplayersWindowsPlugin"));
-  AutoUpdatePluginRegisterWithRegistrar(
-      registry->GetRegistrarForPlugin("AutoUpdatePlugin"));
   EmojiPickerFlutterPluginCApiRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("EmojiPickerFlutterPluginCApi"));
+  ScreenRetrieverPluginRegisterWithRegistrar(
+      registry->GetRegistrarForPlugin("ScreenRetrieverPlugin"));
+  UrlLauncherWindowsRegisterWithRegistrar(
+      registry->GetRegistrarForPlugin("UrlLauncherWindows"));
+  WindowManagerPluginRegisterWithRegistrar(
+      registry->GetRegistrarForPlugin("WindowManagerPlugin"));
 }

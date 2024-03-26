@@ -41,7 +41,8 @@ dependencies:
   future_debounce_button: ^0.3.0
   pro_image_editor: ^2.5.8
   uuid: ^4.3.3
-  auto_update: ^0.0.4
+  path_provider: ^2.1.2
+  updat: ^1.3.2
 
 
 dev_dependencies:
