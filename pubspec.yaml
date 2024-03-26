@@ -1,5 +1,5 @@
 name: video_cutter
-description: "A new Flutter project."
+description: "VideoCutter is a small application that automatically cuts a randomly selected videos to a specified beat."
 publish_to: 'none'
 
 version: 1.0.0
