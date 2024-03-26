@@ -1,9 +1,5 @@
-import 'dart:convert';
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:updat/theme/chips/floating_with_silent_download.dart';
-import 'package:http/http.dart' as http;
 import 'package:updat/updat_window_manager.dart';
 import 'src/version.dart' as version;
 import 'pages/fill_in_page.dart';
