@@ -3,7 +3,8 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/services.dart';
-import 'package:video_cutter/util/backend/ffmpeg_util.dart';
+
+import 'ffmpeg_util.dart';
 
 const String kCuttingRunnable = 'cutter.exe';
 

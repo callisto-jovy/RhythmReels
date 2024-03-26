@@ -1,8 +1,8 @@
-name: video_cutter
-description: "VideoCutter is a small application that automatically cuts a randomly selected videos to a specified beat."
+name: rhythm_reels
+description: "rhythm_reels is a small application that automatically cuts a randomly selected videos to a specified beat."
 publish_to: 'none'
 
-version: 1.0.4
+version: 1.0.5
 
 environment:
   sdk: '>=3.2.5 <4.0.0'
