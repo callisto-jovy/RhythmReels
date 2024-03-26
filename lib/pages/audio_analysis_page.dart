@@ -9,9 +9,6 @@ import 'package:wav/wav_file.dart';
 import '../util/audio/audio_loader.dart' as audio_loader;
 
 import '../util/utils.dart';
-import '../widgets/audio_player_controls.dart';
-import '../widgets/styles.dart';
-import '../util/extensions/build_context_extension.dart';
 import '../widgets/widgets.dart';
 import 'program_output_page.dart';
 

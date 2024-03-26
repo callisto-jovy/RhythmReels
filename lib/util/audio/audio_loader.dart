@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import '../config.dart';
 import 'package:path/path.dart' as path;
 
 import '../utils.dart';
