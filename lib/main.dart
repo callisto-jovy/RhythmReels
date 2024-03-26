@@ -51,7 +51,6 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
     );
   }
-
   // Reference: https://github.com/aguilaair/updat/blob/main/example/lib/main.dart
   @override
   Widget build(BuildContext context) {
