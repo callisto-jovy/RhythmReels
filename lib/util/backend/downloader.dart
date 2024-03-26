@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:dio/dio.dart';
 import 'package:path/path.dart' as path;
 import 'package:http/http.dart' as http;
 
@@ -18,15 +19,14 @@ class Downloader {
   Future<void> download({required String url, required File output, List<String>? command}) async {
     await _organizeResources();
 
-    final Process process =
-        await Process.start(_localInstall.path, ['--update-to', 'nightly', ...?command, url, '--output', output.path]);
+    final Process process = await Process.start(_localInstall.path, ['--update-to', 'stable', ...?command, url, '--output', output.path]);
 
     process.stdout.transform(utf8.decoder).forEach(print);
 
     // wait for the process to finish
     final int exitCode = await process.exitCode;
 
-    if(exitCode != 0) {
+    if (exitCode != 0) {
       return Future.error('Yt-dlp exited with a code of non-zero. Something went wrong while downloading.');
     }
   }
@@ -53,7 +53,11 @@ class Downloader {
         continue;
       }
 
-      await _localInstall.writeAsBytes(await http.readBytes(Uri.parse(url)));
+      try {
+        await Dio().download(url, _localInstall);
+      } catch (e) {
+        rethrow;
+      }
     }
   }
 }
