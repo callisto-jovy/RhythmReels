@@ -1,8 +1,13 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:updat/theme/chips/floating_with_silent_download.dart';
 import 'package:updat/updat.dart';
 
+import 'package:http/http.dart' as http;
+import 'package:updat/updat_window_manager.dart';
+import 'src/version.dart' as version;
 import 'pages/fill_in_page.dart';
 import 'util/utils.dart';
 import 'widgets/styles.dart';
@@ -40,9 +45,14 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   final (bool, String) _environmentStatus = checkEnvironment();
 
-  @override
-  void initState() {
-    super.initState();
+  Future<String> _getLatestVersion() async {
+    // Github gives us a super useful latest endpoint, and we can use it to get the latest stable release
+    final data = await http.get(Uri.parse(
+      "https://api.github.com/repos/$kGitHubProject/releases/latest",
+    ));
+
+    // Return the tag name, which is always a semantically versioned string.
+    return jsonDecode(data.body)["tag_name"];
   }
 
   Widget _buildNextButton() {
@@ -57,40 +67,37 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
+  // Reference: https://github.com/aguilaair/updat/blob/main/example/lib/main.dart
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
-        centerTitle: true,
-      ),
-      body: Center(
-        child: SizedBox(
-          width: 400,
-          child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            Text(
-              'Welcome back',
-              style: Theme.of(context).textTheme.headlineLarge,
-            ),
-            const Padding(padding: EdgeInsets.all(10)),
-            Text('Environment status:\n${_environmentStatus.$2}', style: Theme.of(context).textTheme.headlineSmall),
-            const Padding(padding: EdgeInsets.all(10)),
-            UpdatWidget(
-              currentVersion: "1.0.0",
-              getLatestVersion: () async {
-                // Here you should fetch the latest version. It must be semantic versioning for update detection to work properly.
-                return "1.0.1";
-              },
-              getBinaryUrl: (latestVersion) async {
-                return "https://github.com/latest/release/video_cutter-windows.zip";
-              },
-              // Lastly, enter your app name so we know what to call your files.
-              appName: widget.title,
-            ),
-            const Padding(padding: EdgeInsets.all(2)),
-            _buildNextButton()
-          ]),
+    return UpdatWindowManager(
+      appName: widget.title,
+      currentVersion: version.packageVersion,
+      getLatestVersion: _getLatestVersion,
+      getBinaryUrl: (latestVersion) async {
+        return "https://github.com/$kGitHubProject/releases/download/$latestVersion/video_cutter-${Platform.operatingSystem}-$latestVersion.zip";
+      },
+      updateChipBuilder: floatingExtendedChipWithSilentDownload,
+      child: Scaffold(
+        appBar: AppBar(
+          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+          title: Text(widget.title),
+          centerTitle: true,
+        ),
+        body: Center(
+          child: SizedBox(
+            width: 400,
+            child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              Text(
+                'Welcome back',
+                style: Theme.of(context).textTheme.headlineLarge,
+              ),
+              const Padding(padding: EdgeInsets.all(10)),
+              Text('Environment status:\n${_environmentStatus.$2}', style: Theme.of(context).textTheme.headlineSmall),
+              const Padding(padding: EdgeInsets.all(10)),
+              _buildNextButton()
+            ]),
+          ),
         ),
       ),
     );

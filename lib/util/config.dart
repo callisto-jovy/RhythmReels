@@ -9,3 +9,6 @@ final Directory resourceDirectory = Directory(path.join(workingDirectory.path, '
 final Directory dataDirectory = Directory(path.join(workingDirectory.path, 'data'))..createSync();
 
 const Uuid kUUID = Uuid();
+
+
+const String kGitHubProject = 'callisto-jovy/video_cutter_ui';
