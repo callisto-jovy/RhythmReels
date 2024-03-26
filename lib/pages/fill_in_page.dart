@@ -3,7 +3,7 @@ import 'package:future_debounce_button/future_debounce_button.dart';
 import 'package:simple_youtube_editor_ui/pages/audio_analysis_page.dart';
 import 'package:simple_youtube_editor_ui/util/model/audio.dart';
 import 'package:simple_youtube_editor_ui/widgets/build_context_extension.dart';
-import '../util/audio_loader.dart' as audio_loader;
+import '../util/audio/audio_loader.dart' as audio_loader;
 import '../widgets/snackbars.dart';
 
 class FillInPage extends StatefulWidget {
