@@ -94,27 +94,12 @@ class _ProgramOutputPageState extends State<ProgramOutputPage> {
             _saveEditorConfig().then((value) => saveImageBytes(bytes)).then((value) => imageOverlay = value).then((value) => Navigator.pop(context));
           },
           configs: const ProImageEditorConfigs(
-            cropRotateEditorConfigs: CropRotateEditorConfigs(
-              enabled: false
-            ),
+            cropRotateEditorConfigs: CropRotateEditorConfigs(enabled: false),
             emojiEditorConfigs: EmojiEditorConfigs(
               enabled: true,
               initScale: 5.0,
-              textStyle: TextStyle(
-                  fontFamily: 'Apple Color Emoji'),
+              textStyle: TextStyle(fontFamily: 'AppleColorEmoji', fontFamilyFallback: ['NotoColorEmoji']),
               checkPlatformCompatibility: false,
-              /*  emojiSet: [
-                                CategoryEmoji(
-                                  Category.ANIMALS,
-                                  [
-                                    Emoji(
-                                      'emoji',
-                                      'name',
-                                      hasSkinTone: false,
-                                    ),
-                                  ],
-                                )
-                              ], */
             ),
           ),
         ),
