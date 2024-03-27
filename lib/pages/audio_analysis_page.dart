@@ -207,7 +207,6 @@ class _AudioAnalysisState extends State<AudioAnalysis> {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                //TODO: Play / pause in a single button..
                 PlayerWidget(player: _player),
 
                 TextButton(

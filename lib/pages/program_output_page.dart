@@ -20,7 +20,7 @@ class ProgramOutputPage extends StatefulWidget {
 }
 
 class _ProgramOutputPageState extends State<ProgramOutputPage> {
-  final TextEditingController _outputController = TextEditingController(text: 'output.mp4');
+  final TextEditingController _outputController = TextEditingController();
   final TextEditingController _videosController = TextEditingController(text: 'videos.txt');
   final StreamController<String> _streamController = StreamController();
   final ScrollController _scrollLogController = ScrollController();
