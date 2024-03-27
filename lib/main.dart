@@ -43,10 +43,6 @@ class _MyHomePageState extends State<MyHomePage> {
     super.initState();
   }
 
-  void _displayFfmpegProgress(final FFMpegProgress progress) {
-    ScaffoldMessenger.of(context).showSnackBar(successSnackbar(progress.phase.name));
-  }
-
   Future<void> _solveEnvironmentAndNavigate() async {
     FFMpegHelper.instance
         .isFFMpegPresent()
