@@ -7,7 +7,6 @@ export 'extensions/build_context_extension.dart';
 export 'model/audio.dart';
 export 'model/audio_data.dart';
 export 'config.dart';
-export 'environment_helper.dart';
 export 'file_util.dart';
 export 'image_util.dart';
 export 'backend/ffmpeg_util.dart';
