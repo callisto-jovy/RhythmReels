@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
 import 'package:path/path.dart' as path;
@@ -11,12 +12,18 @@ final Directory scenesDirectory = Directory(path.join(workingDirectory.path, 'sc
 final Directory resourceDirectory = Directory(path.join(workingDirectory.path, 'resources'))..createSync();
 
 ///
-Future<Directory> getDataDirectory() async {
+Future<Directory> getApplicationDirectory() async {
+  final PackageInfo packageInfo = await PackageInfo.fromPlatform();
   final Directory documentsDir = await getApplicationDocumentsDirectory();
+  final String appName = packageInfo.appName;
 
-  final Directory dataDirectory = Directory(path.join(documentsDir.path, 'data'));
+  final Directory dataDirectory = Directory(path.join(documentsDir.path, appName));
 
   return dataDirectory.create();
+}
+
+Future<Directory> getDataDirectory() async {
+  return getApplicationDirectory().then((value) => Directory(path.join(value.path, 'data')).create());
 }
 
 const Uuid kUUID = Uuid();

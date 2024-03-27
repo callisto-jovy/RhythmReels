@@ -3,10 +3,8 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:path/path.dart' as path;
 import 'package:http/http.dart' as http;
-import 'package:path_provider/path_provider.dart';
-import 'package:rhythm_reels/util/backend/ffmpeg_util.dart';
+import '../utils.dart';
 
-import '../config.dart';
 
 const String kYtDlpLatest = 'https://api.github.com/repos/yt-dlp/yt-dlp/releases/latest';
 
@@ -17,7 +15,7 @@ class Downloader {
   const Downloader();
 
   Future<File> _getLocalInstallPath() async {
-    final Directory documents = await getApplicationDocumentsDirectory();
+    final Directory documents = await getApplicationDirectory();
 
     return File(path.join(documents.path, 'yt-dlp.exe'));
   }
@@ -64,7 +62,7 @@ class Downloader {
       }
 
       try {
-        await Dio().download(url, localInstall);
+        await Dio().download(url, localInstall.path);
       } catch (e) {
         rethrow;
       }
