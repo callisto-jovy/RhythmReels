@@ -3,24 +3,31 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:path/path.dart' as path;
 import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
 import 'package:rhythm_reels/util/backend/ffmpeg_util.dart';
 
 import '../config.dart';
 
 const String kYtDlpLatest = 'https://api.github.com/repos/yt-dlp/yt-dlp/releases/latest';
 
-final Downloader downloader = Downloader(resourceDirectory);
+const Downloader kDownloader = Downloader();
+const kFileName = 'yt-dlp.exe';
 
 class Downloader {
-  final File _localInstall;
-  final Directory _directory;
+  const Downloader();
 
-  Downloader(this._directory) : _localInstall = File(path.join(_directory.path, 'yt-dlp.exe'));
+  Future<File> _getLocalInstallPath() async {
+    final Directory documents = await getApplicationDocumentsDirectory();
+
+    return File(path.join(documents.path, 'yt-dlp.exe'));
+  }
 
   Future<void> download({required String url, required File output, List<String>? command}) async {
     await _organizeResources();
 
-    final Process process = await Process.start(_localInstall.path, ['--update-to', 'stable', ...?command, url, '--output', output.path]);
+    final File localInstall = await _getLocalInstallPath();
+
+    final Process process = await Process.start(localInstall.path, ['--update-to', 'stable', ...?command, url, '--output', output.path]);
 
     process.stdout.transform(utf8.decoder).forEach(print);
 
@@ -33,7 +40,9 @@ class Downloader {
   }
 
   Future<void> _organizeResources() async {
-    if (_localInstall.existsSync()) {
+    final File localInstall = await _getLocalInstallPath();
+
+    if (localInstall.existsSync()) {
       return;
     }
 
@@ -50,12 +59,12 @@ class Downloader {
       final String name = asset['name'];
       final String? url = asset['browser_download_url'];
 
-      if (name != path.basename(_localInstall.path) || url == null) {
+      if (name != path.basename(localInstall.path) || url == null) {
         continue;
       }
 
       try {
-        await Dio().download(url, _localInstall);
+        await Dio().download(url, localInstall);
       } catch (e) {
         rethrow;
       }

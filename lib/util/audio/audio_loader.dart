@@ -39,6 +39,7 @@ Future<File> loadAudio(final Audio audio) async {
   final String fileName = '${audio.hashCode}.wav';
   final File audioFile = File(path.join(downloadDirectory.path, fileName));
 
+  // Don't re-download the file.
   if (await audioFile.exists()) {
     return audioFile;
   }
@@ -46,7 +47,7 @@ Future<File> loadAudio(final Audio audio) async {
   // Custom ffmpeg location
   // TODO: What are we going to do when no ffmpeg??
 
-  await downloader.download(url: audio.url, output: audioFile, command: [
+  await kDownloader.download(url: audio.url, output: audioFile, command: [
     '--extract-audio',
     '--audio-format',
     'wav',
