@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:future_debounce_button/future_debounce_button.dart';
 import 'package:updat/theme/chips/floating_with_silent_download.dart';
 import 'package:updat/updat_window_manager.dart';
 import 'src/version.dart' as version;
@@ -24,7 +25,6 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       home: const MyHomePage(title: 'Video Cutter'),
     );
-
   }
 }
 
@@ -47,26 +47,24 @@ class _MyHomePageState extends State<MyHomePage> {
     ScaffoldMessenger.of(context).showSnackBar(successSnackbar(progress.phase.name));
   }
 
-  void _solveEnvironmentAndNavigate() async {
+  Future<void> _solveEnvironmentAndNavigate() async {
     FFMpegHelper.instance
         .isFFMpegPresent()
-        .then((value) => value ? value : FFMpegHelper.instance.setupFFMpegOnWindows())
-        .then((value) => context.navigatePage((context) => const FillInPage()))
+        .then((value) async => value ? value : await FFMpegHelper.instance.setupFFMpegOnWindows())
+        .then((value) => value ? context.navigatePage((context) => const FillInPage()) : throw Exception('Could not set up ffmpeg.'))
         .catchError((e) {
       ScaffoldMessenger.of(context).showSnackBar(errorSnackbar('$e'));
     });
   }
 
-  /// Custom styled text button with a reversed icon position
   Widget _buildNextButton() {
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: TextButton.icon(
-        onPressed: _solveEnvironmentAndNavigate,
-        style: textButtonStyle(context),
-        icon: const Icon(Icons.navigate_before),
-        label: const Text('Next'),
-      ),
+    return FutureDebounceButton<void>(
+      buttonType: FDBType.filledTonal,
+      onPressed: _solveEnvironmentAndNavigate,
+      actionCallText: 'Next',
+      onAbort: null,
+      errorStateDuration: const Duration(seconds: 10),
+      successStateDuration: const Duration(seconds: 5),
     );
   }
 
