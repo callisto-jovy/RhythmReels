@@ -2,7 +2,7 @@ name: rhythm_reels
 description: "rhythm_reels is a small application that automatically cuts a randomly selected videos to a specified beat."
 publish_to: 'none'
 
-version: 1.0.7
+version: 1.0.8
 
 environment:
   sdk: '>=3.2.5 <4.0.0'

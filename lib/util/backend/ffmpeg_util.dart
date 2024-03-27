@@ -7,6 +7,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:archive/archive_io.dart';
+import 'package:rhythm_reels/util/config.dart';
 
 import 'ffmpeg_progress.dart';
 
@@ -27,12 +28,11 @@ class FFMpegHelper {
 
   Future<void> initialize() async {
     if (Platform.isWindows) {
-      PackageInfo packageInfo = await PackageInfo.fromPlatform();
-      String appName = packageInfo.appName;
-      Directory tempDir = await getTemporaryDirectory();
+      final Directory tempDir = await getTemporaryDirectory();
       _tempFolderPath = path.join(tempDir.path, "ffmpeg");
-      Directory appDocDir = await getApplicationDocumentsDirectory();
-      _ffmpegInstallationPath = path.join(appDocDir.path, appName, "ffmpeg");
+
+      final Directory appDocDir = await getApplicationDirectory();
+      _ffmpegInstallationPath = path.join(appDocDir.path, "ffmpeg");
       _ffmpegBinDirectory = path.join(_ffmpegInstallationPath!, "ffmpeg-master-latest-win64-gpl", "bin");
     }
   }
