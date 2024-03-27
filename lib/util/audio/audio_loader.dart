@@ -7,8 +7,10 @@ import '../utils.dart';
 
 Future<AudioData> loadAudioData(final Audio audio, final File audioFile) async {
   final String fileName = '${audio.hashCode}.bin';
-  final File output = File(path.join(dataDirectory.path, fileName));
+  final Directory dataDir = await getDataDirectory();
+  final File output = File(path.join(dataDir.path, fileName));
 
+  // Sanity check.
   if (!await output.exists()) {
     return AudioData(audioFile, []);
   }
@@ -25,7 +27,8 @@ Future<void> saveAudioData(final AudioData audioData, final List<double> beatPos
   }
 
   final String fileName = '${path.basenameWithoutExtension(audioData.audioFile.path)}.bin';
-  final File output = File(path.join(dataDirectory.path, fileName));
+  final Directory dataDir = await getDataDirectory();
+  final File output = File(path.join(dataDir.path, fileName));
 
   final Float64List beatsAsFloat64 = Float64List.fromList(beatPositions);
 
@@ -40,12 +43,16 @@ Future<File> loadAudio(final Audio audio) async {
     return audioFile;
   }
 
+  // Custom ffmpeg location
+  // TODO: What are we going to do when no ffmpeg??
+
   await downloader.download(url: audio.url, output: audioFile, command: [
-    "--extract-audio",
-    "--audio-format",
-    "wav",
-    "--postprocessor-args",
-    "ffmpeg: -ss ${audio.startTime} ${audio.endTime.isEmpty ? '' : '-to ${audio.endTime}'}",
+    '--extract-audio',
+    '--audio-format',
+    'wav',
+    if (FFMpegHelper.instance.ffmpegBinDirectory != null) ...['--ffmpeg-location', FFMpegHelper.instance.ffmpegBinDirectory!],
+    '--postprocessor-args',
+    'ffmpeg: -ss ${audio.startTime} ${audio.endTime.isEmpty ? '' : '-to ${audio.endTime}'}',
   ]);
 
   return audioFile;

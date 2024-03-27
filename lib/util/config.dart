@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
 import 'package:path/path.dart' as path;
 import 'package:http/http.dart' as http;
@@ -8,7 +9,15 @@ final Directory workingDirectory = Directory('temp')..createSync();
 final Directory downloadDirectory = Directory(path.join(workingDirectory.path, 'downloaded'))..createSync();
 final Directory scenesDirectory = Directory(path.join(workingDirectory.path, 'scenes'))..createSync();
 final Directory resourceDirectory = Directory(path.join(workingDirectory.path, 'resources'))..createSync();
-final Directory dataDirectory = Directory(path.join(workingDirectory.path, 'data'))..createSync();
+
+///
+Future<Directory> getDataDirectory() async {
+  final Directory documentsDir = await getApplicationDocumentsDirectory();
+
+  final Directory dataDirectory = Directory(path.join(documentsDir.path, 'data'));
+
+  return dataDirectory.create();
+}
 
 const Uuid kUUID = Uuid();
 
