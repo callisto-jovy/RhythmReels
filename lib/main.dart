@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:future_debounce_button/future_debounce_button.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:updat/theme/chips/flat_with_check_for.dart';
-import 'package:updat/theme/chips/floating_with_silent_download.dart';
 import 'package:updat/updat_window_manager.dart';
 import 'src/version.dart' as version;
 import 'pages/fill_in_page.dart';
