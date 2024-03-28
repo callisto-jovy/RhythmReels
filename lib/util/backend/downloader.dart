@@ -1,15 +1,25 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:dio/dio.dart';
-import 'package:path/path.dart' as path;
-import 'package:http/http.dart' as http;
-import '../utils.dart';
 
+import 'package:dio/dio.dart';
+import 'package:http/http.dart' as http;
+import 'package:path/path.dart' as path;
+
+import '../utils.dart';
 
 const String kYtDlpLatest = 'https://api.github.com/repos/yt-dlp/yt-dlp/releases/latest';
 
 const Downloader kDownloader = Downloader();
-const kFileName = 'yt-dlp.exe';
+
+String _determineFilename() {
+  if (Platform.isWindows) {
+    return 'yt-dlp.exe';
+  } else if (Platform.isMacOS) {
+    return 'yt-dlp_macos';
+  }
+  // Platform not supported.
+  return '-1';
+}
 
 class Downloader {
   const Downloader();
@@ -17,7 +27,7 @@ class Downloader {
   Future<File> _getLocalInstallPath() async {
     final Directory documents = await getApplicationDirectory();
 
-    return File(path.join(documents.path, 'yt-dlp.exe'));
+    return File(path.join(documents.path, _determineFilename()));
   }
 
   Future<void> download({required String url, required File output, List<String>? command}) async {
@@ -25,7 +35,8 @@ class Downloader {
 
     final File localInstall = await _getLocalInstallPath();
 
-    final Process process = await Process.start(localInstall.path, ['--update-to', 'stable', ...?command, url, '--output', output.path]);
+    final Process process = await Process.start(
+        localInstall.path, ['--update-to', 'stable', ...?command, url, '--output', output.path]);
 
     process.stdout.transform(utf8.decoder).forEach(print);
 
@@ -33,7 +44,8 @@ class Downloader {
     final int exitCode = await process.exitCode;
 
     if (exitCode != 0) {
-      return Future.error('Yt-dlp exited with a code of non-zero. Something went wrong while downloading.');
+      return Future.error(
+          'Yt-dlp exited with a code of non-zero. Something went wrong while downloading.');
     }
   }
 
@@ -47,7 +59,8 @@ class Downloader {
     http.Response response = await http.get(Uri.parse(kYtDlpLatest));
 
     if (response.statusCode != 200) {
-      return Future.error('Response returned a status code of non-200, response code was ${response.statusCode}.');
+      return Future.error(
+          'Response returned a status code of non-200, response code was ${response.statusCode}.');
     }
 
     final dynamic json = jsonDecode(response.body);
