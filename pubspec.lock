@@ -285,10 +285,10 @@ packages:
     dependency: "direct main"
     description:
       name: dio
-      sha256: "50fec96118958b97c727d0d8f67255d3683f16cc1f90d9bc917b5d4fe3abeca9"
+      sha256: "0978e9a3e45305a80a7210dbeaf79d6ee8bee33f70c8e542dc654c952070217f"
       url: "https://pub.dev"
     source: hosted
-    version: "5.4.2"
+    version: "5.4.2+1"
   emoji_picker_flutter:
     dependency: transitive
     description:
@@ -489,10 +489,10 @@ packages:
     dependency: transitive
     description:
       name: image_editor_ohos
-      sha256: "59752dcc8451ebe44a12a42d70b0938611f09353c694f39d001de4ead60dd20a"
+      sha256: "2f6ae408f7879387a64dcac096ad9db0dc5e0985f6106d6f2a9b969c8932b09c"
       url: "https://pub.dev"
     source: hosted
-    version: "0.0.4"
+    version: "0.0.5"
   image_editor_platform_interface:
     dependency: transitive
     description:
