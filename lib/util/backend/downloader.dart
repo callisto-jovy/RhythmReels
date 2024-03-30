@@ -11,32 +11,22 @@ const String kYtDlpLatest = 'https://api.github.com/repos/yt-dlp/yt-dlp/releases
 
 const Downloader kDownloader = Downloader();
 
-String _determineFilename() {
-  if (Platform.isWindows) {
-    return 'yt-dlp.exe';
-  } else if (Platform.isMacOS) {
-    return 'yt-dlp_macos';
-  }
-  // Platform not supported.
-  return '-1';
-}
-
 class Downloader {
   const Downloader();
 
-  Future<File> _getLocalInstallPath() async {
-    final Directory documents = await getApplicationDirectory();
+  Future<String> _getLocalInstallPath() async {
+    if (!Platform.isWindows) {
+      return 'yt-dlp';
+    }
 
-    return File(path.join(documents.path, _determineFilename()));
+    return (await _organizeResourcesWindows()).path;
   }
 
   Future<void> download({required String url, required File output, List<String>? command}) async {
-    await _organizeResources();
-
-    final File localInstall = await _getLocalInstallPath();
+    final String localInstall = await _getLocalInstallPath();
 
     final Process process = await Process.start(
-        localInstall.path, ['--update-to', 'stable', ...?command, url, '--output', output.path]);
+        localInstall, ['--update-to', 'stable', ...?command, url, '--output', output.path]);
 
     process.stdout.transform(utf8.decoder).forEach(print);
 
@@ -49,11 +39,13 @@ class Downloader {
     }
   }
 
-  Future<void> _organizeResources() async {
-    final File localInstall = await _getLocalInstallPath();
+  Future<File> _organizeResourcesWindows() async {
+    final Directory documents = await getApplicationDirectory();
+
+    final File localInstall = File(path.join(documents.path, 'yt-dlp.exe'));
 
     if (localInstall.existsSync()) {
-      return;
+      return localInstall;
     }
 
     http.Response response = await http.get(Uri.parse(kYtDlpLatest));
@@ -80,5 +72,7 @@ class Downloader {
         rethrow;
       }
     }
+
+    return localInstall;
   }
 }
