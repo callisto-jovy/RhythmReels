@@ -7,12 +7,15 @@ import 'package:path/path.dart' as path;
 
 import '../utils.dart';
 
+/// Const api point for the latest yt-dlp release.
 const String kYtDlpLatest = 'https://api.github.com/repos/yt-dlp/yt-dlp/releases/latest';
 
-const Downloader kDownloader = Downloader();
-
 class Downloader {
-  const Downloader();
+  static final Downloader _singleton = Downloader._internal();
+
+  factory Downloader() => _singleton;
+
+  Downloader._internal();
 
   Future<String> _getLocalInstallPath() async {
     if (!Platform.isWindows) {

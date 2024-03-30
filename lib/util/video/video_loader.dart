@@ -14,7 +14,7 @@ Future<File> loadVideo(final String videoUrl) async {
   }
 
   // Download the mp4. Force the container
-  await kDownloader.download(url: videoUrl, output: videoFile, command: ['-S', 'res,ext:mp4:m4a']);
+  await Downloader().download(url: videoUrl, output: videoFile, command: ['-S', 'res,ext:mp4:m4a']);
 
   return videoFile;
 }
