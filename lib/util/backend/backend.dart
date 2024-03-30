@@ -47,15 +47,18 @@ Stream<String> runCutting(
   final File backend = await initBackend();
 
   final Process process = await Process.start(
-    'java -jar ${backend.path}',
+    'java',
     [
+      '-jar',
+      backend.path,
       '--audio',
       audioPath,
       '--videos',
       videosPath,
       '--output',
       outputPath,
-      if (await FFMpegHelper.instance.isFFMpegPresent()) ...[
+      if (await FFMpegHelper.instance.isFFMpegPresent() &&
+          FFMpegHelper.instance.ffmpegBinDirectory != null) ...[
         '--ffmpeg',
         FFMpegHelper.instance.ffmpegBinDirectory!
       ],
