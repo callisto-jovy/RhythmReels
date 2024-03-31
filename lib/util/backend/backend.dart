@@ -43,6 +43,10 @@ Stream<String> runCutting(
     beats.add('${value / 1000}'); // Program expects the timestamps in seconds
   }
 
+  // Custom ffmpeg location
+  final Directory? ffmpegPlatform = await FFMpegHelper().getPlatformFFMpeg();
+  final bool ffmpegPresent = await FFMpegHelper().localInstallPerformed();
+
   // Load the cutter from the root bundle
   final File backend = await initBackend();
 
@@ -57,11 +61,7 @@ Stream<String> runCutting(
       videosPath,
       '--output',
       outputPath,
-      if (await FFMpegHelper.instance.isFFMpegPresent() &&
-          FFMpegHelper.instance.ffmpegBinDirectory != null) ...[
-        '--ffmpeg',
-        FFMpegHelper.instance.ffmpegBinDirectory!
-      ],
+      if (ffmpegPresent && ffmpegPlatform != null) ...['--ffmpeg', ffmpegPlatform.path],
       if (imageOverlay != null) ...[
         '--image_overlay',
         imageOverlay.path

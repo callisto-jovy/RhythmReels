@@ -1,14 +1,21 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:isolate';
 
+import 'package:archive/archive_io.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
-import 'package:archive/archive_io.dart';
 import 'package:rhythm_reels/util/config.dart';
 
 import 'ffmpeg_progress.dart';
+
+//
+const String _ffmpegWindowsUrl =
+    'https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip';
+
+const String _ffmpegMacOsUrl = 'https://evermeet.cx/pub/ffmpeg/ffmpeg-6.1.1.zip';
+const String _ffprobeMacOsUrl = 'https://evermeet.cx/pub/ffprobe/ffprobe-6.1.1.zip';
 
 class FFMpegHelper {
   static final FFMpegHelper _singleton = FFMpegHelper._internal();
@@ -19,164 +26,233 @@ class FFMpegHelper {
 
   static FFMpegHelper get instance => _singleton;
 
-  //
-  final String _ffmpegUrl = "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip";
-  String? _tempFolderPath;
-  String? _ffmpegBinDirectory;
-  String? _ffmpegInstallationPath;
+  /// Creates the necessary directories for the ffmpeg windows install.
+  /// Returns the [Director] to the bin directories where the binaries lie.
+  Future<Directory> _getWindowsDirectory() async {
+    final Directory appDir = await getApplicationDirectory();
 
-  Future<void> initialize() async {
+    final String ffmpegInstallationPath = path.join(appDir.path, 'ffmpeg');
+    final String ffmpegBinDirectory =
+        path.join(ffmpegInstallationPath, 'ffmpeg-master-latest-win64-gpl', 'bin');
+
+    return Directory(ffmpegBinDirectory).create();
+  }
+
+  /// Creates the necessary directories for the ffmpeg windows install.
+  /// Returns the [Director] to the ffmpeg directory where the binaries lie.
+  Future<Directory> _getMacDirectory() async {
+    final Directory appDir = await getApplicationDirectory();
+    final String ffmpegInstallationPath = path.join(appDir.path, 'ffmpeg');
+
+    return Directory(ffmpegInstallationPath).create();
+  }
+
+  Future<Directory?> getPlatformFFMpeg() {
     if (Platform.isWindows) {
-      final Directory tempDir = await getTemporaryDirectory();
-      _tempFolderPath = path.join(tempDir.path, "ffmpeg");
+      return _getWindowsDirectory();
+    } else if (Platform.isMacOS) {
+      return _getMacDirectory();
+    }
 
-      final Directory appDocDir = await getApplicationDirectory();
-      _ffmpegInstallationPath = path.join(appDocDir.path, "ffmpeg");
-      _ffmpegBinDirectory = path.join(_ffmpegInstallationPath!, "ffmpeg-master-latest-win64-gpl", "bin");
+    return Future(() => null);
+  }
+
+  /// Verifies whether Ffmpeg has been installed by the program on windows. Checks for ffmpeg & ffprobe
+  ///
+  Future<bool> _checkFFMpegWindows() async {
+    final Directory ffmpegBinDir = await _getWindowsDirectory();
+
+    final File ffmpeg = File(path.join(ffmpegBinDir.path, 'ffmpeg.exe'));
+    final File ffprobe = File(path.join(ffmpegBinDir.path, 'ffprobe.exe'));
+
+    return await ffmpeg.exists() && await ffprobe.exists();
+  }
+
+  Future<bool> _checkFFMpegMacOs() async {
+    final Directory ffmpegBinDir = await _getMacDirectory();
+
+    final File ffmpeg = File(path.join(ffmpegBinDir.path, 'ffmpeg'));
+    final File ffprobe = File(path.join(ffmpegBinDir.path, 'ffprobe'));
+
+    return await ffmpeg.exists() && await ffprobe.exists();
+  }
+
+  Future<bool> _checkFFMpegViaProcess() async {
+    try {
+      final Process processFfmpeg = await Process.start(
+        'ffmpeg',
+        ['--help'],
+      );
+
+      // TODO: Find way to do this.
+      final Process processFprobe = await Process.start(
+        'ffprobe',
+        [],
+      );
+
+      final int ffmpeg = await processFfmpeg.exitCode;
+      print('ffmpeg $ffmpeg');
+      final int ffprobe = await processFprobe.exitCode;
+      print('ffprobe $ffprobe');
+
+      return ffmpeg == 0; // success
+    } catch (e) {
+      return false;
     }
   }
 
-  String? get ffmpegBinDirectory => _ffmpegBinDirectory;
+  Future<bool> localInstallPerformed() async {
+    if (Platform.isWindows) {
+      return _checkFFMpegWindows();
+    } else if (Platform.isMacOS) {
+      return _checkFFMpegMacOs();
+    }
 
+    return false;
+  }
+
+  /// Platform independent check of the ffmpeg install.
+  ///
   Future<bool> isFFMpegPresent() async {
     if (Platform.isWindows) {
-      if ((_ffmpegBinDirectory == null) || (_tempFolderPath == null)) {
-        await initialize();
-      }
-      File ffmpeg = File(path.join(_ffmpegBinDirectory!, "ffmpeg.exe"));
-      File ffprobe = File(path.join(_ffmpegBinDirectory!, "ffprobe.exe"));
-      if ((await ffmpeg.exists()) && (await ffprobe.exists())) {
-        return true;
-      } else {
-        return false;
-      }
+      return _checkFFMpegViaProcess()
+          .then((value) async => value ? value : await _checkFFMpegWindows());
+    } else if (Platform.isMacOS) {
+      return _checkFFMpegViaProcess()
+          .then((value) async => value ? value : await _checkFFMpegMacOs());
     } else if (Platform.isLinux) {
-      try {
-        Process process = await Process.start(
-          'ffmpeg',
-          ['--help'],
-        );
-        return await process.exitCode == 0; // success
-      } catch (e) {
-        return false;
-      }
-    } else {
-      return true;
+      return _checkFFMpegViaProcess();
     }
+    // No ffmpeg detected.
+    return false;
   }
 
-  static Future<void> extractZipFileIsolate(Map data) async {
-    try {
-      String? zipFilePath = data['zipFile'];
-      String? targetPath = data['targetPath'];
-      if ((zipFilePath != null) && (targetPath != null)) {
-        await extractFileToDisk(zipFilePath, targetPath);
-      }
-    } catch (e) {
-      return;
+  Future<bool> setupFFMpeg({
+    CancelToken? cancelToken,
+    void Function(FFMpegProgress progress)? onProgress,
+    Map<String, dynamic>? queryParameters,
+  }) {
+    if (Platform.isWindows) {
+      return _setupFFMpegWindows();
+    } else if (Platform.isMacOS) {
+      return _setupFFMpegMacOs();
     }
+
+    return Future.error('Setup on operating system not supported.');
   }
 
-  Future<bool> setupFFMpegOnWindows({
+  Future<bool> _download({
+    required String url,
+    required String output,
     CancelToken? cancelToken,
     void Function(FFMpegProgress progress)? onProgress,
     Map<String, dynamic>? queryParameters,
   }) async {
-    if (Platform.isWindows) {
-      if ((_ffmpegBinDirectory == null) || (_tempFolderPath == null)) {
-        await initialize();
+    final Response response = await Dio().download(
+      url,
+      output,
+      cancelToken: cancelToken,
+      onReceiveProgress: (int received, int total) => onProgress?.call(FFMpegProgress(
+        downloaded: received,
+        fileSize: total,
+        phase: FFMpegProgressPhase.downloading,
+      )),
+      queryParameters: queryParameters,
+    );
+
+    return response.statusCode == HttpStatus.ok;
+  }
+
+  Future<bool> _extractZip({
+    required String zipPath,
+    required String targetDir,
+    void Function(FFMpegProgress progress)? onProgress,
+  }) async {
+    onProgress?.call(
+        FFMpegProgress(downloaded: 0, fileSize: 0, phase: FFMpegProgressPhase.decompressing));
+
+    return Isolate.run(() async {
+      try {
+        await extractFileToDisk(zipPath, targetDir);
+        return true;
+      } catch (e) {
+        return false;
       }
-      Directory tempDir = Directory(_tempFolderPath!);
-      if (await tempDir.exists() == false) {
-        await tempDir.create(recursive: true);
-      }
-      Directory installationDir = Directory(_ffmpegInstallationPath!);
-      if (await installationDir.exists() == false) {
-        await installationDir.create(recursive: true);
-      }
-      final String ffmpegZipPath = path.join(_tempFolderPath!, "ffmpeg.zip");
-      final File tempZipFile = File(ffmpegZipPath);
-      if (await tempZipFile.exists() == false) {
-        try {
-          Dio dio = Dio();
-          Response response = await dio.download(
-            _ffmpegUrl,
-            ffmpegZipPath,
+    });
+  }
+
+  Future<bool> _setupFFMpegMacOs({
+    CancelToken? cancelToken,
+    void Function(FFMpegProgress progress)? onProgress,
+    Map<String, dynamic>? queryParameters,
+  }) async {
+    final Directory macosDir = await _getMacDirectory();
+    final Directory temporaryDir = await getTemporaryDirectory();
+    final Directory tempDir = Directory(path.join(temporaryDir.path, 'ffmpeg'))..create();
+
+    final String zipFfmpegPath = path.join(tempDir.path, 'ffmpeg.zip');
+    final String zipFfprobePath = path.join(tempDir.path, 'ffprobe.zip');
+
+    final bool ffmpegExists = File(zipFfmpegPath).existsSync();
+    final bool ffprobeExists = File(zipFfprobePath).existsSync();
+    // extract ffmpeg from zip
+
+    if (!ffmpegExists &&
+        !await _download(
+            url: _ffmpegMacOsUrl,
+            output: zipFfmpegPath,
+            onProgress: onProgress,
             cancelToken: cancelToken,
-            onReceiveProgress: (int received, int total) {
-              onProgress?.call(FFMpegProgress(
-                downloaded: received,
-                fileSize: total,
-                phase: FFMpegProgressPhase.downloading,
-              ));
-            },
-            queryParameters: queryParameters,
-          );
-          if (response.statusCode == HttpStatus.ok) {
-            onProgress?.call(FFMpegProgress(
-              downloaded: 0,
-              fileSize: 0,
-              phase: FFMpegProgressPhase.decompressing,
-            ));
-            await compute(extractZipFileIsolate, {
-              'zipFile': tempZipFile.path,
-              'targetPath': _ffmpegInstallationPath,
-            });
-            onProgress?.call(FFMpegProgress(
-              downloaded: 0,
-              fileSize: 0,
-              phase: FFMpegProgressPhase.inactive,
-            ));
-            return true;
-          } else {
-            onProgress?.call(FFMpegProgress(
-              downloaded: 0,
-              fileSize: 0,
-              phase: FFMpegProgressPhase.inactive,
-            ));
-            return false;
-          }
-        } catch (e) {
-          onProgress?.call(FFMpegProgress(
-            downloaded: 0,
-            fileSize: 0,
-            phase: FFMpegProgressPhase.inactive,
-          ));
-          return false;
-        }
-      } else {
-        onProgress?.call(FFMpegProgress(
-          downloaded: 0,
-          fileSize: 0,
-          phase: FFMpegProgressPhase.decompressing,
-        ));
-        try {
-          await compute(extractZipFileIsolate, {
-            'zipFile': tempZipFile.path,
-            'targetPath': _ffmpegInstallationPath,
-          });
-          onProgress?.call(FFMpegProgress(
-            downloaded: 0,
-            fileSize: 0,
-            phase: FFMpegProgressPhase.inactive,
-          ));
-          return true;
-        } catch (e) {
-          onProgress?.call(FFMpegProgress(
-            downloaded: 0,
-            fileSize: 0,
-            phase: FFMpegProgressPhase.inactive,
-          ));
-          return false;
-        }
-      }
-    } else {
-      onProgress?.call(FFMpegProgress(
-        downloaded: 0,
-        fileSize: 0,
-        phase: FFMpegProgressPhase.inactive,
-      ));
-      return true;
+            queryParameters: queryParameters)) {
+      return false;
     }
+
+    if (!await _extractZip(
+        zipPath: zipFfmpegPath, targetDir: macosDir.path, onProgress: onProgress)) {
+      return false;
+    }
+
+    if (!ffprobeExists &&
+        !await _download(
+            url: _ffprobeMacOsUrl,
+            output: zipFfprobePath,
+            cancelToken: cancelToken,
+            onProgress: onProgress,
+            queryParameters: queryParameters)) {
+      return false;
+    }
+
+    if (!await _extractZip(
+        zipPath: zipFfprobePath, targetDir: macosDir.path, onProgress: onProgress)) {
+      return false;
+    }
+
+    return ffprobeExists && ffmpegExists;
+  }
+
+  Future<bool> _setupFFMpegWindows({
+    CancelToken? cancelToken,
+    void Function(FFMpegProgress progress)? onProgress,
+    Map<String, dynamic>? queryParameters,
+  }) async {
+    final Directory windowsDir = await _getWindowsDirectory();
+    final Directory temporaryDir = await getTemporaryDirectory();
+    final Directory tempDir = Directory(path.join(temporaryDir.path, 'ffmpeg'))..create();
+
+    final String zipPath = path.join(tempDir.path, 'ffmpeg.zip');
+
+    // Download, then extract
+    if (!File(zipPath).existsSync()) {
+      if (!await _download(
+          url: _ffmpegWindowsUrl,
+          output: zipPath,
+          onProgress: onProgress,
+          cancelToken: cancelToken,
+          queryParameters: queryParameters)) {
+        return false;
+      }
+    }
+
+    return _extractZip(zipPath: zipPath, targetDir: windowsDir.path, onProgress: onProgress);
   }
 }
