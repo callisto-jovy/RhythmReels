@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:future_debounce_button/future_debounce_button.dart';
 import 'package:updat/theme/chips/flat_with_check_for.dart';
 import 'package:updat/updat_window_manager.dart';
-import 'src/version.dart' as version;
+
 import 'pages/fill_in_page.dart';
+import 'src/version.dart' as version;
 import 'util/utils.dart';
 import 'widgets/widgets.dart';
 
@@ -44,10 +45,14 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> _solveEnvironmentAndNavigate() async {
-    FFMpegHelper.instance
+    print(await FFMpegHelper().isFFMpegPresent());
+
+    return FFMpegHelper()
         .isFFMpegPresent()
-        .then((value) async => value ? value : await FFMpegHelper.instance.setupFFMpegOnWindows())
-        .then((value) => value ? context.navigatePage((context) => const FillInPage()) : throw Exception('Could not set up ffmpeg.'))
+        .then((value) async => value ? value : await FFMpegHelper.instance.setupFFMpeg())
+        .then((value) => value
+            ? context.navigatePage((context) => const FillInPage())
+            : throw Exception('Could not set up ffmpeg.'))
         .catchError((e) {
       ScaffoldMessenger.of(context).showSnackBar(errorSnackbar('$e'));
     });
@@ -84,14 +89,17 @@ class _MyHomePageState extends State<MyHomePage> {
         body: Center(
           child: SizedBox(
             width: 400,
-            child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-              Text(
-                'Welcome back',
-                style: Theme.of(context).textTheme.headlineLarge,
-              ),
-              const Padding(padding: EdgeInsets.all(10)),
-              _buildNextButton(),
-            ]),
+            child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    'Welcome back',
+                    style: Theme.of(context).textTheme.headlineLarge,
+                  ),
+                  const Padding(padding: EdgeInsets.all(10)),
+                  _buildNextButton(),
+                ]),
           ),
         ),
       ),

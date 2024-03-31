@@ -32,6 +32,7 @@ class Downloader {
         localInstall, ['--update-to', 'stable', ...?command, url, '--output', output.path]);
 
     process.stdout.transform(utf8.decoder).forEach(print);
+    process.stderr.transform(utf8.decoder).forEach(print);
 
     // wait for the process to finish
     final int exitCode = await process.exitCode;

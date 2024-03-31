@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:future_debounce_button/future_debounce_button.dart';
+
 import '../util/audio/audio_loader.dart' as audio_loader;
 import '../util/utils.dart';
 import '../widgets/widgets.dart';
@@ -24,7 +25,6 @@ class _FillInPageState extends State<FillInPage> {
 
   /// [GlobalKey] which wraps all the text fields with a validation mechanism
   final GlobalKey<FormState> _formKey = GlobalKey();
-
 
   // TODO: move this elsewhere
 
@@ -54,6 +54,7 @@ class _FillInPageState extends State<FillInPage> {
         .then((value) => audio_loader.loadAudioData(audio, value))
         .then((value) => context.navigatePage((context) => AudioAnalysis(data: value)))
         .catchError((e) {
+      print(e);
       ScaffoldMessenger.of(context).showSnackBar(errorSnackbar('$e'));
     });
   }
@@ -80,7 +81,9 @@ class _FillInPageState extends State<FillInPage> {
                     labelText: 'Audio Url',
                   ),
                   validator: (value) {
-                    return (value != null && value.isEmpty) ? 'The given url may not be empty!' : null;
+                    return (value != null && value.isEmpty)
+                        ? 'The given url may not be empty!'
+                        : null;
                   },
                 ),
                 TextFormField(
@@ -89,7 +92,9 @@ class _FillInPageState extends State<FillInPage> {
                     labelText: 'Time to start the audio',
                   ),
                   validator: (value) {
-                    return (value != null && !ffmpegTimePattern.hasMatch(value)) ? 'Given time does not match with Ffmpeg specification.' : null;
+                    return (value != null && !ffmpegTimePattern.hasMatch(value))
+                        ? 'Given time does not match with Ffmpeg specification.'
+                        : null;
                   },
                 ),
                 TextFormField(
@@ -98,7 +103,9 @@ class _FillInPageState extends State<FillInPage> {
                     labelText: 'Time to end the audio',
                   ),
                   validator: (value) {
-                    return (value != null && !ffmpegTimePattern.hasMatch(value)) ? 'Given time does not match with Ffmpeg specification.' : null;
+                    return (value != null && !ffmpegTimePattern.hasMatch(value))
+                        ? 'Given time does not match with Ffmpeg specification.'
+                        : null;
                   },
                 ),
                 FutureDebounceButton<void>(
