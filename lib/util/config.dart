@@ -77,3 +77,9 @@ Future<String> getChangeLog(final String _, final String __) async {
   ));
   return jsonDecode(data.body)["body"];
 }
+
+///////// Preferences /////////
+
+const String kEditorStateKey = 'editor.state';
+const String kOutputKey = 'output.path';
+const String kVideosKey = 'videos.path';

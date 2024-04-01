@@ -39,8 +39,8 @@ class _ProgramOutputPageState extends State<ProgramOutputPage> {
     // load previous input
 
     getPreferences().then((value) {
-      _outputController.text = value.getString('output.path') ?? _outputController.text;
-      _videosController.text = value.getString('videos.path') ?? _videosController.text;
+      _outputController.text = value.getString(kOutputKey) ?? _outputController.text;
+      _videosController.text = value.getString(kVideosKey) ?? _videosController.text;
     }).then((value) => setState(() {}));
   }
 
@@ -48,9 +48,7 @@ class _ProgramOutputPageState extends State<ProgramOutputPage> {
   Future<void> dispose() async {
     super.dispose();
     // save text contents
-    final SharedPreferences preferences = await getPreferences();
-    await preferences.setString('output.path', _outputController.text);
-    await preferences.setString('videos.path', _videosController.text);
+    await _savePreferences();
 
     await _streamController.close();
     _outputController.dispose();
@@ -58,11 +56,33 @@ class _ProgramOutputPageState extends State<ProgramOutputPage> {
     _scrollLogController.dispose();
   }
 
+  Future<void> _savePreferences() async {
+    final SharedPreferences preferences = await getPreferences();
+    await preferences.setString(kOutputKey, _outputController.text);
+    await preferences.setString(kVideosKey, _videosController.text);
+  }
+
+  Future<void> _saveEditorConfig() async {
+    return getPreferences().then((pref) => _imageEditor.currentState
+        ?.exportStateHistory(
+          // All configurations are optional
+          configs: const ExportEditorConfigs(
+            exportPainting: true,
+            exportText: true,
+            exportCropRotate: false,
+            exportFilter: true,
+            exportEmoji: true,
+            exportSticker: true,
+            historySpan: ExportHistorySpan.current,
+          ),
+        )
+        .toJson()
+        .then((value) => pref.setString(kEditorStateKey, value)));
+  }
+
   Future<void> _runCutter() async {
     // save the text contents
-    final SharedPreferences preferences = await getPreferences();
-    await preferences.setString('output.path', _outputController.text);
-    await preferences.setString('videos.path', _videosController.text);
+    await _savePreferences();
 
     final Stream<String> logStream = backend.runCutting(
         audioPath: widget.audioPath,
@@ -81,28 +101,10 @@ class _ProgramOutputPageState extends State<ProgramOutputPage> {
     }).onError((e) => ScaffoldMessenger.of(context).showSnackBar(errorSnackbar('$e')));
   }
 
-  Future<void> _saveEditorConfig() async {
-    return getPreferences().then((pref) => _imageEditor.currentState
-        ?.exportStateHistory(
-          // All configurations are optional
-          configs: const ExportEditorConfigs(
-            exportPainting: true,
-            exportText: true,
-            exportCropRotate: false,
-            exportFilter: true,
-            exportEmoji: true,
-            exportSticker: true,
-            historySpan: ExportHistorySpan.current,
-          ),
-        )
-        .toJson()
-        .then((value) => pref.setString('editor.state', value)));
-  }
-
   Future<void> _openEditor() async {
     // load previous editor state
     final String? previousState =
-        await getPreferences().then((value) => value.getString('editor.state'));
+        await getPreferences().then((value) => value.getString(kEditorStateKey));
 
     final ImportStateHistory? history = previousState == null
         ? null
