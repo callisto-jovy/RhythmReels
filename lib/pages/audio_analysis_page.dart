@@ -35,9 +35,10 @@ class _AudioAnalysisState extends State<AudioAnalysis> {
   final List<double> _samples = [];
 
   /// The audio length in milliseconds, expressed as a [double].
-  double _lengthInMillis = 0;
+  /// Default = 2 seconds, for the audio waveform.
+  double _lengthInMillis = 2000;
 
-  /// [GlobalKey] assigned to the timestamp painer.
+  /// [GlobalKey] assigned to the timestamp painter.
   final GlobalKey _paintKey = GlobalKey();
 
   /// The [Offset] of the latest mouse hit.
@@ -131,9 +132,8 @@ class _AudioAnalysisState extends State<AudioAnalysis> {
   void _navigateToCutPage() async {
     await _player.pause();
 
-    audio_loader
-        .saveAudioData(widget.data, beatTimes)
-        .then((value) => context.navigatePage((context) => ProgramOutputPage(audioPath: widget.data.path, beatTimes: beatTimes)));
+    audio_loader.saveAudioData(widget.data, beatTimes).then((value) => context.navigatePage(
+        (context) => ProgramOutputPage(audioPath: widget.data.path, beatTimes: beatTimes)));
   }
 
   @override
@@ -208,7 +208,6 @@ class _AudioAnalysisState extends State<AudioAnalysis> {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 PlayerWidget(player: _player),
-
                 TextButton(
                   onPressed: _navigateToCutPage,
                   style: textButtonStyle(context),
