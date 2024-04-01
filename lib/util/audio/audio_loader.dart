@@ -48,7 +48,6 @@ Future<File> loadAudio(final Audio audio) async {
   final bool ffmpegPresent = await FFMpegHelper().localInstallPerformed();
   final Directory? ffmpegPlatform = await FFMpegHelper().getPlatformFFMpeg();
 
-  print(ffmpegPlatform);
   await Downloader().download(url: audio.url, output: audioFile, command: [
     '--extract-audio',
     '--audio-format',

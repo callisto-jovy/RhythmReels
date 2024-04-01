@@ -1,10 +1,12 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:package_info_plus/package_info_plus.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:uuid/uuid.dart';
-import 'package:path/path.dart' as path;
+
 import 'package:http/http.dart' as http;
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:path/path.dart' as path;
+import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:uuid/uuid.dart';
 
 final Directory workingDirectory = Directory('temp')..createSync();
 final Directory downloadDirectory = Directory(path.join(workingDirectory.path, 'downloaded'))
@@ -14,6 +16,11 @@ final Directory scenesDirectory = Directory(path.join(workingDirectory.path, 'sc
 
 /// Constant [UUID] to genrate unique identifiers.
 const Uuid kUUID = Uuid();
+
+///
+Future<SharedPreferences> getPreferences() async {
+  return SharedPreferences.getInstance();
+}
 
 /// Using the path_provider package, a new [Directory] with the app's name is created
 /// in the documents directory.

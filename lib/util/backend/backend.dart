@@ -70,8 +70,6 @@ Stream<String> runCutting(
     ],
   );
 
-  //print(['--audio', audioPath, '--videos', videosPath, '--output', outputPath, ...beats].join(" "));
-
   //process.stdout.transform(utf8.decoder).forEach(print);
   //process.stderr.transform(utf8.decoder).forEach(print);
 

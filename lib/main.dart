@@ -45,8 +45,6 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> _solveEnvironmentAndNavigate() async {
-    print(await FFMpegHelper().isFFMpegPresent());
-
     return FFMpegHelper()
         .isFFMpegPresent()
         .then((value) async => value ? value : await FFMpegHelper.instance.setupFFMpeg())
