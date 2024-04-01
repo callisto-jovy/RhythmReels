@@ -5,6 +5,8 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pro_image_editor/pro_image_editor.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import '../util/backend/backend.dart' as backend;
 import '../util/utils.dart';
 import '../widgets/widgets.dart';
@@ -33,18 +35,35 @@ class _ProgramOutputPageState extends State<ProgramOutputPage> {
   @override
   void initState() {
     super.initState();
+
+    // load previous input
+
+    getPreferences().then((value) {
+      _outputController.text = value.getString('output.path') ?? _outputController.text;
+      _videosController.text = value.getString('videos.path') ?? _videosController.text;
+    }).then((value) => setState(() {}));
   }
 
   @override
-  void dispose() {
+  Future<void> dispose() async {
     super.dispose();
+    // save text contents
+    final SharedPreferences preferences = await getPreferences();
+    await preferences.setString('output.path', _outputController.text);
+    await preferences.setString('videos.path', _videosController.text);
+
+    await _streamController.close();
     _outputController.dispose();
     _videosController.dispose();
     _scrollLogController.dispose();
-    _streamController.close();
   }
 
   Future<void> _runCutter() async {
+    // save the text contents
+    final SharedPreferences preferences = await getPreferences();
+    await preferences.setString('output.path', _outputController.text);
+    await preferences.setString('videos.path', _videosController.text);
+
     final Stream<String> logStream = backend.runCutting(
         audioPath: widget.audioPath,
         outputPath: _outputController.text,
@@ -57,13 +76,13 @@ class _ProgramOutputPageState extends State<ProgramOutputPage> {
     logStream.listen((event) {
       logBuffer.write(event);
       _streamController.add(logBuffer.toString());
-      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollLogController.jumpTo(_scrollLogController.position.maxScrollExtent));
+      WidgetsBinding.instance.addPostFrameCallback(
+          (_) => _scrollLogController.jumpTo(_scrollLogController.position.maxScrollExtent));
     }).onError((e) => ScaffoldMessenger.of(context).showSnackBar(errorSnackbar('$e')));
   }
 
   Future<void> _saveEditorConfig() async {
-    /*
-    await _imageEditor.currentState
+    return getPreferences().then((pref) => _imageEditor.currentState
         ?.exportStateHistory(
           // All configurations are optional
           configs: const ExportEditorConfigs(
@@ -76,12 +95,24 @@ class _ProgramOutputPageState extends State<ProgramOutputPage> {
             historySpan: ExportHistorySpan.current,
           ),
         )
-        .stateHistory();
-
-     */
+        .toJson()
+        .then((value) => pref.setString('editor.state', value)));
   }
 
-  void _openEditor() {
+  Future<void> _openEditor() async {
+    // load previous editor state
+    final String? previousState =
+        await getPreferences().then((value) => value.getString('editor.state'));
+
+    final ImportStateHistory? history = previousState == null
+        ? null
+        : ImportStateHistory.fromJson(previousState,
+            configs: const ImportEditorConfigs(mergeMode: ImportEditorMergeMode.merge));
+
+    if (!mounted) {
+      return;
+    }
+
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -91,14 +122,19 @@ class _ProgramOutputPageState extends State<ProgramOutputPage> {
           onImageEditingComplete: (Uint8List bytes) async {
             // save the bytes into a temp file & use that file in the actual editing process.
 
-            _saveEditorConfig().then((value) => saveImageBytes(bytes)).then((value) => imageOverlay = value).then((value) => Navigator.pop(context));
+            _saveEditorConfig()
+                .then((value) => saveImageBytes(bytes))
+                .then((value) => imageOverlay = value)
+                .then((value) => Navigator.pop(context));
           },
-          configs: const ProImageEditorConfigs(
-            cropRotateEditorConfigs: CropRotateEditorConfigs(enabled: false),
-            emojiEditorConfigs: EmojiEditorConfigs(
+          configs: ProImageEditorConfigs(
+            initStateHistory: history,
+            cropRotateEditorConfigs: const CropRotateEditorConfigs(enabled: false),
+            emojiEditorConfigs: const EmojiEditorConfigs(
               enabled: true,
               initScale: 5.0,
-              textStyle: TextStyle(fontFamily: 'AppleColorEmoji', fontFamilyFallback: ['NotoColorEmoji']),
+              textStyle:
+                  TextStyle(fontFamily: 'AppleColorEmoji', fontFamilyFallback: ['NotoColorEmoji']),
               checkPlatformCompatibility: false,
             ),
           ),
@@ -116,7 +152,9 @@ class _ProgramOutputPageState extends State<ProgramOutputPage> {
           return SingleChildScrollView(
             controller: _scrollLogController,
             scrollDirection: Axis.vertical,
-            child: Text(snapshot.hasError ? 'Error occurred: ${snapshot.error}' : snapshot.data ?? 'Waiting for output'),
+            child: Text(snapshot.hasError
+                ? 'Error occurred: ${snapshot.error}'
+                : snapshot.data ?? 'Waiting for output'),
           );
         },
       ),
@@ -144,7 +182,9 @@ class _ProgramOutputPageState extends State<ProgramOutputPage> {
                   labelText: 'Output directory',
                 ),
                 validator: (value) {
-                  return (value != null && value.isEmpty) ? 'The given url may not be empty!' : null;
+                  return (value != null && value.isEmpty)
+                      ? 'The given url may not be empty!'
+                      : null;
                 },
               ),
               TextFormField(
@@ -153,7 +193,9 @@ class _ProgramOutputPageState extends State<ProgramOutputPage> {
                   labelText: 'Videos input file',
                 ),
                 validator: (value) {
-                  return (value != null && value.isEmpty) ? 'The given url may not be empty!' : null;
+                  return (value != null && value.isEmpty)
+                      ? 'The given url may not be empty!'
+                      : null;
                 },
               ),
               TextButton(
