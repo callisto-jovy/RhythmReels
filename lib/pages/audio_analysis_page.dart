@@ -118,7 +118,7 @@ class _AudioAnalysisState extends State<AudioAnalysis> {
       beatTimes.remove(element);
     }
     _hitOffset = null;
-    // WidgetsBinding.instance.addPostFrameCallback((_) => setState(() {}));
+    WidgetsBinding.instance.addPostFrameCallback((_) => setState(() {}));
   }
 
   /// add a new marker and sets the state post frame.
@@ -128,7 +128,7 @@ class _AudioAnalysisState extends State<AudioAnalysis> {
     beatTimes.sort();
 
     //setState(() {});
-    //  WidgetsBinding.instance.addPostFrameCallback((_) => setState(() {}));
+    WidgetsBinding.instance.addPostFrameCallback((_) => setState(() {}));
   }
 
   void _clearTimestamps() {
@@ -214,14 +214,15 @@ class _AudioAnalysisState extends State<AudioAnalysis> {
               children: [
                 PlayerWidget(player: _player),
                 TextButton(
-                  onPressed: _navigateToCutPage,
-                  style: textButtonStyle(context),
-                  child: const Text('Next'),
-                ),
-                TextButton(
                   onPressed: _clearTimestamps,
                   style: textButtonStyle(context),
                   child: const Text('Clear all'),
+                ),
+                const Padding(padding: EdgeInsets.all(8)),
+                TextButton(
+                  onPressed: _navigateToCutPage,
+                  style: textButtonStyle(context),
+                  child: const Text('Next'),
                 ),
               ],
             ),
