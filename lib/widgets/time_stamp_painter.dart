@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../util/extensions/duration_extension.dart';
 
 class TimeStampPainter extends CustomPainter {
@@ -15,11 +16,11 @@ class TimeStampPainter extends CustomPainter {
 
   TimeStampPainter(
       {super.repaint,
-        required this.timeStamps,
-        required this.audioLength,
-        required this.hitOffset,
-        required this.newTimeStamp,
-        required this.hitTimeStamp});
+      required this.timeStamps,
+      required this.audioLength,
+      required this.hitOffset,
+      required this.newTimeStamp,
+      required this.hitTimeStamp});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -38,20 +39,26 @@ class TimeStampPainter extends CustomPainter {
 
       // intersection hit with the offset, remove the timestamp
 
-      if (hitOffset != null && (dx - hitOffset!.dx).abs() <= 2) {
+      if (hitOffset != null && (dx - hitOffset!.dx).abs() <= width) {
         markedForRemoval.add(timeStamp);
       } else {
         canvas.drawLine(p0, p1, paint);
 
         final TextPainter indexTp = TextPainter(
-            text: TextSpan(text: '${timeStamps.indexOf(timeStamp)}'),
-            textDirection: TextDirection.ltr);
+          text: TextSpan(
+              text: '${timeStamps.indexOf(timeStamp)}',
+              style: const TextStyle(color: Colors.blueAccent)),
+          textDirection: TextDirection.ltr,
+        );
         indexTp.layout();
         indexTp.paint(canvas, p0.translate(-indexTp.width * 0.5, -indexTp.height));
 
         final TextPainter stampTp = TextPainter(
-            text: TextSpan(text: Duration(milliseconds: timeStamp.round()).label()),
-            textDirection: TextDirection.ltr);
+          text: TextSpan(
+              text: Duration(milliseconds: timeStamp.round()).label(),
+              style: const TextStyle(color: Colors.blueAccent)),
+          textDirection: TextDirection.ltr,
+        );
         stampTp.layout();
         stampTp.paint(canvas, p1.translate(-stampTp.width * 0.5, 0)); // Center text
       }
