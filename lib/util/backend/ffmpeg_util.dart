@@ -11,8 +11,7 @@ import 'package:rhythm_reels/util/config.dart';
 import 'ffmpeg_progress.dart';
 
 //
-const String _ffmpegWindowsUrl =
-    'https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip';
+const String _ffmpegWindowsUrl = 'https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip';
 
 const String _ffmpegMacOsUrl = 'https://evermeet.cx/pub/ffmpeg/ffmpeg-6.1.1.zip';
 const String _ffprobeMacOsUrl = 'https://evermeet.cx/pub/ffprobe/ffprobe-6.1.1.zip';
@@ -32,8 +31,7 @@ class FFMpegHelper {
     final Directory appDir = await getApplicationDirectory();
 
     final String ffmpegInstallationPath = path.join(appDir.path, 'ffmpeg');
-    final String ffmpegBinDirectory =
-        path.join(ffmpegInstallationPath, 'ffmpeg-master-latest-win64-gpl', 'bin');
+    final String ffmpegBinDirectory = path.join(ffmpegInstallationPath, 'ffmpeg-master-latest-win64-gpl', 'bin');
 
     return Directory(ffmpegBinDirectory).create();
   }
@@ -71,8 +69,8 @@ class FFMpegHelper {
   Future<bool> _checkFFMpegMacOs() async {
     final Directory ffmpegBinDir = await _getMacDirectory();
 
-    final File ffmpeg = File(path.join(ffmpegBinDir.path, 'ffmpeg'));
-    final File ffprobe = File(path.join(ffmpegBinDir.path, 'ffprobe'));
+    final File ffmpeg = File(path.join(ffmpegBinDir.path, 'ffmpeg.app'));
+    final File ffprobe = File(path.join(ffmpegBinDir.path, 'ffprobe.app'));
 
     return await ffmpeg.exists() && await ffprobe.exists();
   }
@@ -84,18 +82,24 @@ class FFMpegHelper {
         ['--help'],
       );
 
+      print('ffmpeg started');
+
       // TODO: Find way to do this.
       final Process processFprobe = await Process.start(
         'ffprobe',
-        [],
+        ['--help'],
       );
 
-      final int ffmpeg = await processFfmpeg.exitCode;
-      print('ffmpeg $ffmpeg');
-      final int ffprobe = await processFprobe.exitCode;
-      print('ffprobe $ffprobe');
+      print('ffprobe started');
 
-      return ffmpeg == 0; // success
+      // Terminate after five seconds. The process isn't responding.
+      Future.delayed(const Duration(seconds: 5)).then((value) => processFfmpeg.kill());
+      final int ffmpeg = await processFfmpeg.exitCode;
+
+      Future.delayed(const Duration(seconds: 5)).then((value) => processFprobe.kill());
+      final int ffprobe = await processFprobe.exitCode;
+
+      return ffmpeg == 0 && ffprobe == 0; // success
     } catch (e) {
       return false;
     }
@@ -115,11 +119,9 @@ class FFMpegHelper {
   ///
   Future<bool> isFFMpegPresent() async {
     if (Platform.isWindows) {
-      return _checkFFMpegViaProcess()
-          .then((value) async => value ? value : await _checkFFMpegWindows());
+      return _checkFFMpegViaProcess().then((value) async => value ? value : await _checkFFMpegWindows());
     } else if (Platform.isMacOS) {
-      return _checkFFMpegViaProcess()
-          .then((value) async => value ? value : await _checkFFMpegMacOs());
+      return _checkFFMpegViaProcess().then((value) async => value ? value : await _checkFFMpegMacOs());
     } else if (Platform.isLinux) {
       return _checkFFMpegViaProcess();
     }
@@ -168,8 +170,7 @@ class FFMpegHelper {
     required String targetDir,
     void Function(FFMpegProgress progress)? onProgress,
   }) async {
-    onProgress?.call(
-        FFMpegProgress(downloaded: 0, fileSize: 0, phase: FFMpegProgressPhase.decompressing));
+    onProgress?.call(FFMpegProgress(downloaded: 0, fileSize: 0, phase: FFMpegProgressPhase.decompressing));
 
     return Isolate.run(() async {
       try {
@@ -198,32 +199,20 @@ class FFMpegHelper {
     // extract ffmpeg from zip
 
     if (!ffmpegExists &&
-        !await _download(
-            url: _ffmpegMacOsUrl,
-            output: zipFfmpegPath,
-            onProgress: onProgress,
-            cancelToken: cancelToken,
-            queryParameters: queryParameters)) {
+        !await _download(url: _ffmpegMacOsUrl, output: zipFfmpegPath, onProgress: onProgress, cancelToken: cancelToken, queryParameters: queryParameters)) {
       return false;
     }
 
-    if (!await _extractZip(
-        zipPath: zipFfmpegPath, targetDir: macosDir.path, onProgress: onProgress)) {
+    if (!await _extractZip(zipPath: zipFfmpegPath, targetDir: macosDir.path, onProgress: onProgress)) {
       return false;
     }
 
     if (!ffprobeExists &&
-        !await _download(
-            url: _ffprobeMacOsUrl,
-            output: zipFfprobePath,
-            cancelToken: cancelToken,
-            onProgress: onProgress,
-            queryParameters: queryParameters)) {
+        !await _download(url: _ffprobeMacOsUrl, output: zipFfprobePath, cancelToken: cancelToken, onProgress: onProgress, queryParameters: queryParameters)) {
       return false;
     }
 
-    if (!await _extractZip(
-        zipPath: zipFfprobePath, targetDir: macosDir.path, onProgress: onProgress)) {
+    if (!await _extractZip(zipPath: zipFfprobePath, targetDir: macosDir.path, onProgress: onProgress)) {
       return false;
     }
 
@@ -243,12 +232,7 @@ class FFMpegHelper {
 
     // Download, then extract
     if (!File(zipPath).existsSync()) {
-      if (!await _download(
-          url: _ffmpegWindowsUrl,
-          output: zipPath,
-          onProgress: onProgress,
-          cancelToken: cancelToken,
-          queryParameters: queryParameters)) {
+      if (!await _download(url: _ffmpegWindowsUrl, output: zipPath, onProgress: onProgress, cancelToken: cancelToken, queryParameters: queryParameters)) {
         return false;
       }
     }
