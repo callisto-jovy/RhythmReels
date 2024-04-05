@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:path/path.dart' as path;
 import 'package:pro_image_editor/pro_image_editor.dart';
 import '../util/backend/backend.dart' as backend;
 import '../util/utils.dart';
@@ -26,14 +27,9 @@ class _ProgramOutputPageState extends State<ProgramOutputPage> {
   final ScrollController _scrollLogController = ScrollController();
 
   // [File] which contains the export result from the image editor.
-  File? imageOverlay;
+  File? _imageOverlay;
 
   final GlobalKey<ProImageEditorState> _imageEditor = GlobalKey();
-
-  @override
-  void initState() {
-    super.initState();
-  }
 
   @override
   void dispose() {
@@ -50,7 +46,7 @@ class _ProgramOutputPageState extends State<ProgramOutputPage> {
         outputPath: _outputController.text,
         videosPath: _videosController.text,
         beatTimes: widget.beatTimes,
-        imageOverlay: imageOverlay);
+        imageOverlay: _imageOverlay);
 
     final StringBuffer logBuffer = StringBuffer();
 
@@ -61,8 +57,13 @@ class _ProgramOutputPageState extends State<ProgramOutputPage> {
     }).onError((e) => ScaffoldMessenger.of(context).showSnackBar(errorSnackbar('$e')));
   }
 
+  Future<void> _loadEditorConfig() async {
+    _imageEditor.currentState?.importStateHistory(ImportStateHistory.fromJsonFile(await getEditorConfig()));
+  }
+
   Future<void> _saveEditorConfig() async {
-    /*
+    final File file = await getEditorConfig();
+
     await _imageEditor.currentState
         ?.exportStateHistory(
           // All configurations are optional
@@ -76,12 +77,12 @@ class _ProgramOutputPageState extends State<ProgramOutputPage> {
             historySpan: ExportHistorySpan.current,
           ),
         )
-        .stateHistory();
-
-     */
+        .toFile(path: file.path);
   }
 
   void _openEditor() {
+    _loadEditorConfig();
+
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -91,7 +92,7 @@ class _ProgramOutputPageState extends State<ProgramOutputPage> {
           onImageEditingComplete: (Uint8List bytes) async {
             // save the bytes into a temp file & use that file in the actual editing process.
 
-            _saveEditorConfig().then((value) => saveImageBytes(bytes)).then((value) => imageOverlay = value).then((value) => Navigator.pop(context));
+            _saveEditorConfig().then((value) => saveImageBytes(bytes)).then((value) => _imageOverlay = value).then((value) => Navigator.pop(context));
           },
           configs: const ProImageEditorConfigs(
             cropRotateEditorConfigs: CropRotateEditorConfigs(enabled: false),

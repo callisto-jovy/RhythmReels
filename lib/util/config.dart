@@ -26,6 +26,14 @@ Future<Directory> getDataDirectory() async {
   return getApplicationDirectory().then((value) => Directory(path.join(value.path, 'data')).create());
 }
 
+Future<File> getEditorConfig() async {
+  final Directory documents = await getApplicationDirectory();
+
+  final String configFile = path.join(documents.path, 'editor_state.json');
+
+  return File(configFile);
+}
+
 const Uuid kUUID = Uuid();
 
 const String kGitHubProject = 'callisto-jovy/video_cutter_ui';
