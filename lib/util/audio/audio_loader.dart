@@ -45,13 +45,14 @@ Future<File> loadAudio(final Audio audio) async {
   }
 
   // Custom ffmpeg location
-  // TODO: What are we going to do when no ffmpeg??
+  final bool ffmpegPresent = await FFMpegHelper().localInstallPerformed();
+  final Directory? ffmpegPlatform = await FFMpegHelper().getPlatformFFMpeg();
 
-  await kDownloader.download(url: audio.url, output: audioFile, command: [
+  await Downloader().download(url: audio.url, output: audioFile, command: [
     '--extract-audio',
     '--audio-format',
     'wav',
-    if (FFMpegHelper.instance.ffmpegBinDirectory != null) ...['--ffmpeg-location', FFMpegHelper.instance.ffmpegBinDirectory!],
+    if (ffmpegPresent && ffmpegPlatform != null) ...['--ffmpeg-location', ffmpegPlatform.path],
     '--postprocessor-args',
     'ffmpeg: -ss ${audio.startTime} ${audio.endTime.isEmpty ? '' : '-to ${audio.endTime}'}',
   ]);

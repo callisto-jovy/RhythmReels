@@ -6,8 +6,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_audio_waveforms/flutter_audio_waveforms.dart';
 import 'package:path/path.dart' as path;
 import 'package:wav/wav_file.dart';
-import '../util/audio/audio_loader.dart' as audio_loader;
 
+import '../util/audio/audio_loader.dart' as audio_loader;
 import '../util/utils.dart';
 import '../widgets/widgets.dart';
 import 'program_output_page.dart';
@@ -32,12 +32,13 @@ class _AudioAnalysisState extends State<AudioAnalysis> {
   Duration _playerPosition = const Duration();
 
   /// [List] of the audio file's audio samples.
-  final List<double> _samples = [];
+  late final List<double> _samples;
 
   /// The audio length in milliseconds, expressed as a [double].
-  double _lengthInMillis = 0;
+  /// Default = 2 seconds, for the audio waveform.
+  double _lengthInMillis = 2000;
 
-  /// [GlobalKey] assigned to the timestamp painer.
+  /// [GlobalKey] assigned to the timestamp painter.
   final GlobalKey _paintKey = GlobalKey();
 
   /// The [Offset] of the latest mouse hit.
@@ -60,8 +61,7 @@ class _AudioAnalysisState extends State<AudioAnalysis> {
     final List<double> samplesData = chopSamples(wav.toMono(), wav.samplesPerSecond);
 
     setState(() {
-      _samples.clear();
-      _samples.addAll(samplesData);
+      _samples = samplesData;
     });
 
     // Listen for position changes, so that the state can change, whenever the position passes a beat.
@@ -98,14 +98,18 @@ class _AudioAnalysisState extends State<AudioAnalysis> {
       return;
     }
 
-    if (event.logicalKey == LogicalKeyboardKey.enter) {
-      _addNewTimeStamp(_playerPosition.inMilliseconds.toDouble());
-    } else if (event.logicalKey == LogicalKeyboardKey.space) {
-      if (_player.state == PlayerState.playing) {
-        _player.pause();
-      } else if (_player.state == PlayerState.paused || _player.state == PlayerState.completed) {
-        _player.resume();
-      }
+    switch (event.logicalKey) {
+      case LogicalKeyboardKey.enter:
+        _addNewTimeStamp(_playerPosition.inMilliseconds.toDouble());
+        break;
+
+      case LogicalKeyboardKey.space:
+        if (_player.state == PlayerState.playing) {
+          _player.pause();
+        } else if (_player.state == PlayerState.paused || _player.state == PlayerState.completed) {
+          _player.resume();
+        }
+        break;
     }
   }
 
@@ -119,21 +123,24 @@ class _AudioAnalysisState extends State<AudioAnalysis> {
 
   /// add a new marker and sets the state post frame.
   void _addNewTimeStamp(final double timeStamp) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      beatTimes.add(timeStamp);
-      // Sort timestamps.
-      beatTimes.sort();
-      setState(() {});
-    });
+    beatTimes.add(timeStamp);
+    // Sort timestamps.
+    beatTimes.sort();
+
+    //setState(() {});
+    WidgetsBinding.instance.addPostFrameCallback((_) => setState(() {}));
+  }
+
+  void _clearTimestamps() {
+    beatTimes.clear();
   }
 
   /// Saves the current state & navigates to the cut page.
   void _navigateToCutPage() async {
     await _player.pause();
 
-    audio_loader
-        .saveAudioData(widget.data, beatTimes)
-        .then((value) => context.navigatePage((context) => ProgramOutputPage(audioPath: widget.data.path, beatTimes: beatTimes)));
+    audio_loader.saveAudioData(widget.data, beatTimes).then((value) => context.navigatePage(
+        (context) => ProgramOutputPage(audioPath: widget.data.path, beatTimes: beatTimes)));
   }
 
   @override
@@ -172,15 +179,13 @@ class _AudioAnalysisState extends State<AudioAnalysis> {
                 onKeyEvent: _handleKeyboardInput,
                 child: Stack(
                   children: [
-                    RepaintBoundary(
-                      child: PolygonWaveform(
-                        samples: _samples,
-                        height: size.height * 0.5,
-                        width: size.width * 0.95,
-                        elapsedDuration: _playerPosition,
-                        maxDuration: Duration(milliseconds: _lengthInMillis.round()),
-                        activeColor: Colors.greenAccent,
-                      ),
+                    PolygonWaveform(
+                      samples: _samples,
+                      height: size.height * 0.5,
+                      width: size.width * 0.95,
+                      elapsedDuration: _playerPosition,
+                      maxDuration: Duration(milliseconds: _lengthInMillis.round()),
+                      activeColor: Colors.greenAccent,
                     ),
                     CustomPaint(
                       key: _paintKey,
@@ -208,7 +213,12 @@ class _AudioAnalysisState extends State<AudioAnalysis> {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 PlayerWidget(player: _player),
-
+                TextButton(
+                  onPressed: _clearTimestamps,
+                  style: textButtonStyle(context),
+                  child: const Text('Clear all'),
+                ),
+                const Padding(padding: EdgeInsets.all(8)),
                 TextButton(
                   onPressed: _navigateToCutPage,
                   style: textButtonStyle(context),

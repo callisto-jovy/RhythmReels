@@ -1,53 +1,62 @@
 import 'dart:convert';
 import 'dart:io';
+
 import 'package:dio/dio.dart';
-import 'package:path/path.dart' as path;
 import 'package:http/http.dart' as http;
+import 'package:path/path.dart' as path;
+
 import '../utils.dart';
 
-
+/// Const api point for the latest yt-dlp release.
 const String kYtDlpLatest = 'https://api.github.com/repos/yt-dlp/yt-dlp/releases/latest';
 
-const Downloader kDownloader = Downloader();
-const kFileName = 'yt-dlp.exe';
-
 class Downloader {
-  const Downloader();
+  static final Downloader _singleton = Downloader._internal();
 
-  Future<File> _getLocalInstallPath() async {
-    final Directory documents = await getApplicationDirectory();
+  factory Downloader() => _singleton;
 
-    return File(path.join(documents.path, 'yt-dlp.exe'));
+  Downloader._internal();
+
+  Future<String> _getLocalInstallPath() async {
+    if (!Platform.isWindows) {
+      return 'yt-dlp';
+    }
+
+    return (await _organizeResourcesWindows()).path;
   }
 
   Future<void> download({required String url, required File output, List<String>? command}) async {
-    await _organizeResources();
+    final String localInstall = await _getLocalInstallPath();
 
-    final File localInstall = await _getLocalInstallPath();
-
-    final Process process = await Process.start(localInstall.path, ['--update-to', 'stable', ...?command, url, '--output', output.path]);
+    final Process process = await Process.start(
+        localInstall, ['--update-to', 'stable', ...?command, url, '--output', output.path]);
 
     process.stdout.transform(utf8.decoder).forEach(print);
+    process.stderr.transform(utf8.decoder).forEach(print);
 
     // wait for the process to finish
     final int exitCode = await process.exitCode;
 
     if (exitCode != 0) {
-      return Future.error('Yt-dlp exited with a code of non-zero. Something went wrong while downloading.');
+      return Future.error(
+          'Yt-dlp exited with a code of non-zero. Something went wrong while downloading.');
     }
   }
 
-  Future<void> _organizeResources() async {
-    final File localInstall = await _getLocalInstallPath();
+  Future<File> _organizeResourcesWindows() async {
+    final Directory documents = await getApplicationDirectory();
+
+    final File localInstall = File(path.join(documents.path, 'yt-dlp.exe'));
 
     if (localInstall.existsSync()) {
-      return;
+      return localInstall;
     }
 
     http.Response response = await http.get(Uri.parse(kYtDlpLatest));
 
     if (response.statusCode != 200) {
-      return Future.error('Response returned a status code of non-200, response code was ${response.statusCode}.');
+      return Future.error(
+          'Response returned a status code of non-200, response code was ${response.statusCode}.');
     }
 
     final dynamic json = jsonDecode(response.body);
@@ -67,5 +76,7 @@ class Downloader {
         rethrow;
       }
     }
+
+    return localInstall;
   }
 }
