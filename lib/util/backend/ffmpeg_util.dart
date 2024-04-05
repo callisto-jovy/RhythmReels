@@ -82,15 +82,11 @@ class FFMpegHelper {
         ['--help'],
       );
 
-      print('ffmpeg started');
-
       // TODO: Find way to do this.
       final Process processFprobe = await Process.start(
         'ffprobe',
         ['--help'],
       );
-
-      print('ffprobe started');
 
       // Terminate after five seconds. The process isn't responding.
       Future.delayed(const Duration(seconds: 5)).then((value) => processFfmpeg.kill());
