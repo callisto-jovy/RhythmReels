@@ -8,7 +8,8 @@ import 'src/version.dart' as version;
 import 'util/utils.dart';
 import 'widgets/widgets.dart';
 
-Future<void> main() async {
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const MyApp());
 }
 

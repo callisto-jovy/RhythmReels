@@ -89,10 +89,10 @@ class FFMpegHelper {
       );
 
       // Terminate after five seconds. The process isn't responding.
-      Future.delayed(const Duration(seconds: 5)).then((value) => processFfmpeg.kill());
+      Future.delayed(const Duration(seconds: 2)).then((value) => processFfmpeg.kill());
       final int ffmpeg = await processFfmpeg.exitCode;
 
-      Future.delayed(const Duration(seconds: 5)).then((value) => processFprobe.kill());
+      Future.delayed(const Duration(seconds: 2)).then((value) => processFprobe.kill());
       final int ffprobe = await processFprobe.exitCode;
 
       return ffmpeg == 0 && ffprobe == 0; // success

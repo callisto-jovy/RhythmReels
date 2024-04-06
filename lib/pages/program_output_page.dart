@@ -1,9 +1,11 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
+import 'dart:isolate';
+import 'dart:ui';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:pro_image_editor/pro_image_editor.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -84,32 +86,42 @@ class _ProgramOutputPageState extends State<ProgramOutputPage> {
     // save the text contents
     await _savePreferences();
 
-    final Stream<String> logStream = backend.runCutting(
+    final StringBuffer logBuffer = StringBuffer();
+    // Transformer that concatenates all the stream's data using a [StringBuffer]
+    final transformer = StreamTransformer<dynamic, String>.fromHandlers(
+      handleData: (data, sink) {
+        // clear the buffer, every now and then -- limit the amount of data to 120.
+        if(logBuffer.length > 120) {
+          logBuffer.clear();
+        }
+
+        logBuffer.write(data);
+
+        sink.add(logBuffer.toString());
+
+      },
+    );
+
+    // port for the isolate.
+    final ReceivePort receivePort = ReceivePort();
+
+    receivePort.transform(transformer).listen((message) => _streamController.add(message.toString()));
+
+    backend.runBackendIsolate(
+        receivePort: receivePort,
         audioPath: widget.audioPath,
         outputPath: _outputController.text,
         videosPath: _videosController.text,
         beatTimes: widget.beatTimes,
         imageOverlay: imageOverlay);
-
-    final StringBuffer logBuffer = StringBuffer();
-
-    logStream.listen((event) {
-      logBuffer.write(event);
-      _streamController.add(logBuffer.toString());
-      WidgetsBinding.instance.addPostFrameCallback(
-          (_) => _scrollLogController.jumpTo(_scrollLogController.position.maxScrollExtent));
-    }).onError((e) => ScaffoldMessenger.of(context).showSnackBar(errorSnackbar('$e')));
   }
 
   Future<void> _openEditor() async {
     // load previous editor state
-    final String? previousState =
-        await getPreferences().then((value) => value.getString(kEditorStateKey));
+    final String? previousState = await getPreferences().then((value) => value.getString(kEditorStateKey));
 
-    final ImportStateHistory? history = previousState == null
-        ? null
-        : ImportStateHistory.fromJson(previousState,
-            configs: const ImportEditorConfigs(mergeMode: ImportEditorMergeMode.merge));
+    final ImportStateHistory? history =
+        previousState == null ? null : ImportStateHistory.fromJson(previousState, configs: const ImportEditorConfigs(mergeMode: ImportEditorMergeMode.merge));
 
     if (!mounted) {
       return;
@@ -124,10 +136,7 @@ class _ProgramOutputPageState extends State<ProgramOutputPage> {
           onImageEditingComplete: (Uint8List bytes) async {
             // save the bytes into a temp file & use that file in the actual editing process.
 
-            _saveEditorConfig()
-                .then((value) => saveImageBytes(bytes))
-                .then((value) => imageOverlay = value)
-                .then((value) => Navigator.pop(context));
+            _saveEditorConfig().then((value) => saveImageBytes(bytes)).then((value) => imageOverlay = value).then((value) => Navigator.pop(context));
           },
           configs: ProImageEditorConfigs(
             initStateHistory: history,
@@ -135,8 +144,7 @@ class _ProgramOutputPageState extends State<ProgramOutputPage> {
             emojiEditorConfigs: const EmojiEditorConfigs(
               enabled: true,
               initScale: 5.0,
-              textStyle:
-                  TextStyle(fontFamily: 'AppleColorEmoji', fontFamilyFallback: ['NotoColorEmoji']),
+              textStyle: TextStyle(fontFamily: 'AppleColorEmoji', fontFamilyFallback: ['NotoColorEmoji']),
               checkPlatformCompatibility: false,
             ),
           ),
@@ -151,12 +159,12 @@ class _ProgramOutputPageState extends State<ProgramOutputPage> {
       child: StreamBuilder(
         stream: _streamController.stream,
         builder: (context, snapshot) {
+          //return Text(snapshot.hasError ? 'Error occurred: ${snapshot.error}' : snapshot.data ?? 'Waiting for output');
+
           return SingleChildScrollView(
             controller: _scrollLogController,
             scrollDirection: Axis.vertical,
-            child: Text(snapshot.hasError
-                ? 'Error occurred: ${snapshot.error}'
-                : snapshot.data ?? 'Waiting for output'),
+            child: Text(snapshot.hasError ? 'Error occurred: ${snapshot.error}' : snapshot.data ?? 'Waiting for output'),
           );
         },
       ),
@@ -184,9 +192,7 @@ class _ProgramOutputPageState extends State<ProgramOutputPage> {
                   labelText: 'Output directory',
                 ),
                 validator: (value) {
-                  return (value != null && value.isEmpty)
-                      ? 'The given url may not be empty!'
-                      : null;
+                  return (value != null && value.isEmpty) ? 'The given url may not be empty!' : null;
                 },
               ),
               TextFormField(
@@ -195,9 +201,7 @@ class _ProgramOutputPageState extends State<ProgramOutputPage> {
                   labelText: 'Videos input file',
                 ),
                 validator: (value) {
-                  return (value != null && value.isEmpty)
-                      ? 'The given url may not be empty!'
-                      : null;
+                  return (value != null && value.isEmpty) ? 'The given url may not be empty!' : null;
                 },
               ),
               TextButton(

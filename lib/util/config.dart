@@ -2,12 +2,13 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:http/http.dart' as http;
-import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
+
+const String appName = 'simple_youtube_editor_ui';
 final Directory workingDirectory = Directory('temp')..createSync();
 final Directory downloadDirectory = Directory(path.join(workingDirectory.path, 'downloaded'))
   ..createSync();
@@ -26,9 +27,7 @@ Future<SharedPreferences> getPreferences() async {
 /// in the documents directory.
 /// Returns a Future with that [Directory].
 Future<Directory> getApplicationDirectory() async {
-  final PackageInfo packageInfo = await PackageInfo.fromPlatform();
   final Directory documentsDir = await getApplicationDocumentsDirectory();
-  final String appName = packageInfo.appName;
 
   //
   final Directory applicationDir = Directory(path.join(documentsDir.path, appName));
