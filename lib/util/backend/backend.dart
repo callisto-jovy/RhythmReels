@@ -32,7 +32,7 @@ Future<File> initBackend() async {
   return await file.writeAsBytes(byteData.buffer.asUint8List(byteData.offsetInBytes, byteData.lengthInBytes));
 }
 
-void runBackendIsolate({
+Future<void> runBackendIsolate({
   required ReceivePort receivePort,
   required String audioPath,
   required String outputPath,
@@ -65,6 +65,7 @@ void runBackendIsolate({
   } catch (e) {
     debugPrint('Isolate failed: $e');
     receivePort.close();
+    rethrow;
   }
 }
 

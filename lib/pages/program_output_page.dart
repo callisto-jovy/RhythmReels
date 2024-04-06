@@ -91,29 +91,33 @@ class _ProgramOutputPageState extends State<ProgramOutputPage> {
     final transformer = StreamTransformer<dynamic, String>.fromHandlers(
       handleData: (data, sink) {
         // clear the buffer, every now and then -- limit the amount of data to 120.
-        if(logBuffer.length > 120) {
+        if (logBuffer.length > 120) {
           logBuffer.clear();
         }
 
         logBuffer.write(data);
 
         sink.add(logBuffer.toString());
-
       },
     );
 
     // port for the isolate.
     final ReceivePort receivePort = ReceivePort();
 
-    receivePort.transform(transformer).listen((message) => _streamController.add(message.toString()));
+    receivePort
+        .transform(transformer)
+        .listen((message) => _streamController.add(message.toString()))
+        .onError((e) => ScaffoldMessenger.of(context).showSnackBar(errorSnackbar('$e')));
 
-    backend.runBackendIsolate(
-        receivePort: receivePort,
-        audioPath: widget.audioPath,
-        outputPath: _outputController.text,
-        videosPath: _videosController.text,
-        beatTimes: widget.beatTimes,
-        imageOverlay: imageOverlay);
+    backend
+        .runBackendIsolate(
+            receivePort: receivePort,
+            audioPath: widget.audioPath,
+            outputPath: _outputController.text,
+            videosPath: _videosController.text,
+            beatTimes: widget.beatTimes,
+            imageOverlay: imageOverlay)
+        .catchError((e) => ScaffoldMessenger.of(context).showSnackBar(errorSnackbar('$e')));
   }
 
   Future<void> _openEditor() async {
